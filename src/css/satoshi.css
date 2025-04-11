@@ -1,0 +1,131 @@
+/**
+ * @license
+ *
+ * Font Family: Tajawal
+ * Designed by: Deni Anggara
+ * URL: https://www.fontshare.com/fonts/Tajawal
+ * © 2023 Indian Type Foundry
+ *
+ * Font Styles:
+ * Tajawal Light
+ * Tajawal Light Italic
+ * Tajawal Regular
+ * Tajawal Italic
+ * Tajawal Medium
+ * Tajawal Medium Italic
+ * Tajawal Bold
+ * Tajawal Bold Italic
+ * Tajawal Black
+ * Tajawal Black Italic
+ *
+*/
+
+@font-face {
+  font-family: 'Tajawal';
+  src: url('../fonts/Tajawal-Light.woff2') format('woff2'),
+       url('../fonts/Tajawal-Light.woff') format('woff'),
+       url('../fonts/Tajawal-Light.ttf') format('truetype');
+       font-weight: 300;
+       font-display: swap;
+       font-style: normal;
+}
+
+
+@font-face {
+  font-family: 'Tajawal';
+  src: url('../fonts/Tajawal-LightItalic.woff2') format('woff2'),
+       url('../fonts/Tajawal-LightItalic.woff') format('woff'),
+       url('../fonts/Tajawal-LightItalic.ttf') format('truetype');
+       font-weight: 300;
+       font-display: swap;
+       font-style: italic;
+}
+
+
+@font-face {
+  font-family: 'Tajawal';
+  src: url('../fonts/Tajawal-Regular.woff2') format('woff2'),
+       url('../fonts/Tajawal-Regular.woff') format('woff'),
+       url('../fonts/Tajawal-Regular.ttf') format('truetype');
+       font-weight: 400;
+       font-display: swap;
+       font-style: normal;
+}
+
+
+@font-face {
+  font-family: 'Tajawal';
+  src: url('../fonts/Tajawal-Italic.woff2') format('woff2'),
+       url('../fonts/Tajawal-Italic.woff') format('woff'),
+       url('../fonts/Tajawal-Italic.ttf') format('truetype');
+       font-weight: 400;
+       font-display: swap;
+       font-style: italic;
+}
+
+
+@font-face {
+  font-family: 'Tajawal';
+  src: url('../fonts/Tajawal-Medium.woff2') format('woff2'),
+       url('../fonts/Tajawal-Medium.woff') format('woff'),
+       url('../fonts/Tajawal-Medium.ttf') format('truetype');
+       font-weight: 500;
+       font-display: swap;
+       font-style: normal;
+}
+
+
+@font-face {
+  font-family: 'Tajawal';
+  src: url('../fonts/Tajawal-MediumItalic.woff2') format('woff2'),
+       url('../fonts/Tajawal-MediumItalic.woff') format('woff'),
+       url('../fonts/Tajawal-MediumItalic.ttf') format('truetype');
+       font-weight: 500;
+       font-display: swap;
+       font-style: italic;
+}
+
+
+@font-face {
+  font-family: 'Tajawal';
+  src: url('../fonts/Tajawal-Bold.woff2') format('woff2'),
+       url('../fonts/Tajawal-Bold.woff') format('woff'),
+       url('../fonts/Tajawal-Bold.ttf') format('truetype');
+       font-weight: 700;
+       font-display: swap;
+       font-style: normal;
+}
+
+
+@font-face {
+  font-family: 'Tajawal';
+  src: url('../fonts/Tajawal-BoldItalic.woff2') format('woff2'),
+       url('../fonts/Tajawal-BoldItalic.woff') format('woff'),
+       url('../fonts/Tajawal-BoldItalic.ttf') format('truetype');
+       font-weight: 700;
+       font-display: swap;
+       font-style: italic;
+}
+
+
+@font-face {
+  font-family: 'Tajawal';
+  src: url('../fonts/Tajawal-Black.woff2') format('woff2'),
+       url('../fonts/Tajawal-Black.woff') format('woff'),
+       url('../fonts/Tajawal-Black.ttf') format('truetype');
+       font-weight: 900;
+       font-display: swap;
+       font-style: normal;
+}
+
+
+@font-face {
+  font-family: 'Tajawal';
+  src: url('../fonts/Tajawal-BlackItalic.woff2') format('woff2'),
+       url('../fonts/Tajawal-BlackItalic.woff') format('woff'),
+       url('../fonts/Tajawal-BlackItalic.ttf') format('truetype');
+       font-weight: 900;
+       font-display: swap;
+       font-style: italic;
+}
+
