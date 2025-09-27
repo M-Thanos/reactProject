@@ -540,12 +540,13 @@ export default function ButtonArea({
         {showControls ? 'إخفاء التحكمات' : 'إظهار التحكمات'}
       </button>
       {hasUnsavedChanges && showControls && (
-        <button
-          onClick={saveAllPositions}
-          className="fixed top-4 right-4 z-50 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md shadow-lg"
-        >
-          حفظ المواقع
-        </button>
+<button
+  onClick={saveAllPositions}
+  className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md shadow-lg"
+>
+  حفظ المواقع
+</button>
+
       )}
       <div className="relative h-full overflow-y-visible">
         <div className="relative min-h-full pb-96 ">
@@ -707,3 +708,4 @@ export default function ButtonArea({
     </main>
   );
 }
+ 

@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">tailAdmin</string>
+    <string name="title_activity_main">tailAdmin</string>
+    <string name="package_name">com.thanos</string>
+    <string name="custom_url_scheme">com.thanos</string>
+</resources>

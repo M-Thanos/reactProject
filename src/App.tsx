@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
-import './css/style.css';
+import './css/tailwind.css'; // ✅ يجب أن يُستورد قبل style.css
+import './css/style.css';   
 
 import Loader from './common/Loader';
 import ButtonDashboard from './pages/ButtonControl/ButtonDashboard';
@@ -31,7 +32,7 @@ function App() {
         </Route>
         <Route 
           path="/client" 
-          element={<ClientButtonArea showControls={false} />} 
+          element={<ClientButtonArea showControls={true} />} 
         />
       </Routes>
     </DefaultLayout>
