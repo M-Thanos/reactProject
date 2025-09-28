@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
-import './css/tailwind.css'; // ✅ يجب أن يُستورد قبل style.css
+import './css/tailwind.css';  
 import './css/style.css';   
 
 import Loader from './common/Loader';
-import ButtonDashboard from './pages/ButtonControl/ButtonDashboard';
+import ButtonDashboard from './pages/ButtonControl/ButtonDashboard' ;
 import ButtonArea from './pages/ButtonControl/ButtonPage/ButtonArea';
 import ClientButtonArea from './pages/ButtonControl/ClientPage/ClientButtonArea';
 

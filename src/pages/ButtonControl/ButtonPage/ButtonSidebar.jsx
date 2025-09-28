@@ -20,7 +20,7 @@ const ButtonSidebar = ({
   const [showNewPageInput, setShowNewPageInput] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [pageToDelete, setPageToDelete] = useState(null);
-  const API_URL = 'https://buttons-back.cowdly.com/api/pages/';
+  const API_URL = 'https://buttons-api-production.up.railway.app/api/pages/';
 
   useEffect(() => {
     const handleClickOutside = (event) => {

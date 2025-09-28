@@ -131,7 +131,7 @@ const ButtonLeftSidebar = ({
     const formData = new FormData();
     formData.append('calculation', JSON.stringify(updatedButton.calculation));
 
-    fetch(`https://buttons-back.cowdly.com/api/buttons/${selectedButton.id}/`, {
+    fetch(`https://buttons-api-production.up.railway.app/api/buttons/${selectedButton.id}/`, {
       method: 'PATCH',
       body: formData,
     })
@@ -167,7 +167,7 @@ const ButtonLeftSidebar = ({
     formData.append('timer', JSON.stringify(updatedButton.timer));
 
     // إرسال التحديث إلى API
-    fetch(`https://buttons-back.cowdly.com/api/buttons/${selectedButton.id}/`, {
+    fetch(`https://buttons-api-production.up.railway.app/api/buttons/${selectedButton.id}/`, {
       method: 'PATCH',
       body: formData,
     })

@@ -3,7 +3,7 @@ import ButtonArea from '../ButtonPage/ButtonArea';
 import ButtonSidebar from '../ButtonPage/ButtonSidebar';
 import ButtonLeftSidebar from '../ButtonPage/ButtonLeftSidebar';
 import { AiOutlineMenu } from 'react-icons/ai';
-
+// DONE
 export default function ClientButtonArea() {
   const [pages, setPages] = useState([]);
   const [currentPageId, setCurrentPageId] = useState(null);
@@ -63,7 +63,7 @@ export default function ClientButtonArea() {
     if (button.timer && executeCallback) {
       setIsTimerRunning(prev => ({ ...prev, [buttonId]: true }));
       setTimeout(() => {
-        setIsTimerRunning(prev => ({ ...prev, [buttonId]: false }));
+        setIsTimerRunning(prev => ({ ...prev, [buttonId]: true }));
       }, button.timer * 1000);
     }
   };
@@ -108,7 +108,7 @@ export default function ClientButtonArea() {
 
       <div className="flex flex-1 gap-3 overflow-hidden">
         {/* Left Sidebar */}
-        <div className={`${sidebarStates.left ? 'w-64 flex-shrink-0' : 'w-0'} transition-all duration-300`}>
+        <div className={`${sidebarStates.left ? 'w-64 flex-shrink-0' : 'w-0'} transition-all duration-300 sm:w-0 sm:hidden`}>
           <ButtonSidebar
             pages={pages}
             setPages={setPages}
@@ -147,7 +147,7 @@ export default function ClientButtonArea() {
         </div>
 
         {/* Right Sidebar */}
-        <div className={`${sidebarStates.right ? 'w-64 flex-shrink-0' : 'w-0'} transition-all duration-300`}>
+        <div className={`${sidebarStates.right ? 'w-64 flex-shrink-0' : 'w-0'} transition-all duration-300 sm:w-0 sm:hidden`}>
           <ButtonLeftSidebar
             pages={pages}
             setPages={setPages}

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { GiMove } from 'react-icons/gi';
+import { GiFlatHammer     } from 'react-icons/gi';
 import { FaPlus } from 'react-icons/fa';
 import { FaPenToSquare } from 'react-icons/fa6';
 import { AiOutlineFullscreen } from 'react-icons/ai';
@@ -60,7 +60,7 @@ const ButtonNavbar = ({
         if (window.confirm('هل أنت متأكد من حذف هذا الزر؟')) {
           // حذف الزر من API
           fetch(
-            `https://buttons-back.cowdly.com/api/buttons/${selectedButton.id}/`,
+            `https://buttons-api-production.up.railway.app/api/buttons/${selectedButton.id}/`,
             {
               method: 'DELETE',
             },
@@ -82,7 +82,7 @@ const ButtonNavbar = ({
     {
       id: 2,
       name: selectedButton?.isFixed ? ' تحريك' : 'تثبيت',
-      icon: <GiMove />,
+      icon: <GiFlatHammer     />,
       action: handleMovementButton,
     },
     {
@@ -93,7 +93,7 @@ const ButtonNavbar = ({
         if (selectedButton) {
           setShowColorPicker(true);
         } else {
-          toast.warning('من فضلك اختر زرًا!');
+          alert('من فضلك اختر زرًا');
         }
       },
     },
@@ -105,7 +105,7 @@ const ButtonNavbar = ({
     },
     {
       id: 5,
-      name: 'كتابه',
+      name: 'كتابة',
       icon: <FaPenToSquare />,
       action: () => {
         if (selectedButton) {
@@ -123,7 +123,7 @@ const ButtonNavbar = ({
         if (selectedButton) {
           setMeasurementForm(true);
         } else {
-          toast.warning('من فضلك اختر زرًا!');
+          alert('من فضلك اختر زرًا');
         }
       },
     },
@@ -163,12 +163,12 @@ const ButtonNavbar = ({
               onClick={toggleShowMenu}
               className="text-white bg-blue-700 hover:bg-blue-800 font-medium rounded-lg text-sm px-5 py-2.5"
             >
-              تغير الشكل
+              خيارات إضافية
             </button>
           </div>
 
           {showMenu && (
-            //  absolute top-[450px] -left-[100px] sm:top-[420px] sm:-left-[300px]
+            //  
             <div
               className={`xl:hidden flex z-99999
            absolute 

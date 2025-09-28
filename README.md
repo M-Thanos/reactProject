@@ -136,4 +136,4 @@ project/
 
 **[MIT License](LICENSE)**
 
-Built with ❤️ by CowdlyTeam
+Built with ❤️

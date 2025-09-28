@@ -5,13 +5,10 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-  DragOverlay,
-  defaultDropAnimation,
 } from '@dnd-kit/core';
 import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable';
 import SortableItem from '../SortableItem';
 import {
-  FaPlus,
   FaFilePdf,
   FaFileWord,
   FaFileExcel,
@@ -21,7 +18,6 @@ import {
   FaVideo,
   FaMusic,
 } from 'react-icons/fa';
-import { arrayMove } from '@dnd-kit/sortable';
 import ButtonDetails from './ButtonDetails';
 import { toast } from 'react-toastify';
 import axios from 'axios';
@@ -29,41 +25,8 @@ import ImageModal from './ImageModal';
 import FilePreviewModal from './FilePreviewModal';
 import { useNavigate } from 'react-router-dom';
 
-const MINIMUM_DISTANCE = 10; // المسافة الدنيا المطلوبة بين الأزرار
-const GRID_SIZE = 160; // حجم ثابت للأزرار
-const GRID_GAP = 20; // مسافة ثابتة بين الأزرار
-
-const getDistance = (pos1, pos2) => {
-  const dx = pos1.x - pos2.x;
-  const dy = pos1.y - pos2.y;
-  return Math.sqrt(dx * dx + dy * dy);
-};
-
-const adjustPosition = (activePos, otherPos) => {
-  const dx = activePos.x - otherPos.x;
-  const dy = activePos.y - otherPos.y;
-  const distance = getDistance(activePos, otherPos);
-
-  if (distance < MINIMUM_DISTANCE && distance > 0) {
-    const scale = MINIMUM_DISTANCE / distance;
-    return {
-      x: otherPos.x + dx * scale,
-      y: otherPos.y + dy * scale,
-    };
-  }
-  return activePos;
-};
-
-const calculateDefaultGridPosition = (index, buttons) => {
-  const COLUMNS = 3; // عدد ثابت من الأعمدة
-  const row = Math.floor(index / COLUMNS);
-  const col = index % COLUMNS;
-
-  return {
-    x: col * (GRID_SIZE + GRID_GAP),
-    y: row * (GRID_SIZE - 50),
-  };
-};
+const GRID_SIZE = 160;
+const GRID_GAP = 20;
 
 const getFileType = (url) => {
   if (!url) return 'other';
@@ -178,19 +141,15 @@ export default function ButtonArea({
   toggleControls,
   setCurrentPageId,
   originalPages,
-  handleButtonClick: parentHandleButtonClick,
   setButtons,
   buttons: providedButtons,
   isTimerRunning,
   clientButtonArea,
 }) {
   const [draggingButtonId, setDraggingButtonId] = useState(null);
-  const [popupPosition, setPopupPosition] = useState(null);
-  const [popupVisible, setPopupVisible] = useState(false);
   const [hoveredButton, setHoveredButton] = useState(null);
   const [positions, setPositions] = useState({});
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-
   const [showModal, setShowModal] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState(null);
   const [showFilePreview, setShowFilePreview] = useState(false);
@@ -198,7 +157,6 @@ export default function ButtonArea({
   const [mediaType, setMediaType] = useState('image');
 
   const buttons = providedButtons || [];
-
   const navigate = useNavigate();
 
   const handleMouseEnter = (button) => {
@@ -229,12 +187,10 @@ export default function ButtonArea({
         !isButtonClick
       ) {
         setSelectedButton(null);
-        setPopupVisible(false);
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
-
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
@@ -243,10 +199,13 @@ export default function ButtonArea({
   useEffect(() => {
     const fetchButtonPositions = async () => {
       try {
-        const response = await axios.get(
-          'https://buttons-back.cowdly.com/api/button-positions/',
-        );
-
+        const savedPositions = localStorage.getItem('buttonPositions');
+        if (savedPositions) {
+          setPositions(JSON.parse(savedPositions));
+          return;
+        }
+  
+        const response = await axios.get('https://buttons-api-production.up.railway.app/api/button-positions/');
         const positionsData = {};
         response.data.forEach((position) => {
           positionsData[position.button] = {
@@ -255,22 +214,16 @@ export default function ButtonArea({
             id: position.id,
           };
         });
-
+  
         setPositions(positionsData);
+        localStorage.setItem('buttonPositions', JSON.stringify(positionsData));
       } catch (error) {
         console.error('Error fetching button positions:', error);
         toast.error('حدث خطأ أثناء تحميل مواقع الأزرار');
       }
     };
-
+  
     fetchButtonPositions();
-  }, []);
-
-  useEffect(() => {
-    const savedPositions = localStorage.getItem('buttonPositions');
-    if (savedPositions) {
-      setPositions(JSON.parse(savedPositions));
-    }
   }, []);
 
   const handleDragEnd = async (event) => {
@@ -298,7 +251,6 @@ export default function ButtonArea({
       },
     };
 
-    // console.log('Updated positions:', newPositions);
     setPositions(newPositions);
     localStorage.setItem('buttonPositions', JSON.stringify(newPositions));
     setHasUnsavedChanges(true);
@@ -309,32 +261,17 @@ export default function ButtonArea({
     setDraggingButtonId(event.active.id);
   };
 
-  const handleButtonAction = (button) => {
-    if (button.action) {
-      button.action();
-    } else {
-      alert('لا توجد وظيفة محددة لهذا الزر!');
-    }
-  };
-
   const handleClick = (button) => {
     if (!showControls) {
+      // منطق النقر على الزر في وضع العرض
       const updatedButtons = buttons.map((btn) => {
         if (btn.id === button.id) {
-          if (button.type === 'shape' && button.shape_details) {
-            return {
-              ...btn,
-              clicks: (btn.clicks || 0) + 1,
-              color: button.shape_details.background_color || btn.color,
-              text_color: button.shape_details.text_color || btn.text_color,
-              name: button.shape_details.text || btn.name,
-            };
-          }
           return { ...btn, clicks: (btn.clicks || 0) + 1 };
         }
         return btn;
       });
 
+      // معالجة الأزرار المرتبطة
       if (button.linked_buttons) {
         const linkedButton = pages.reduce((found, page) => {
           if (found) return found;
@@ -359,6 +296,7 @@ export default function ButtonArea({
         }
       }
 
+      // معالجة الوسائط والملفات
       if (button.type === 'media' && button.media) {
         setSelectedMedia(button.media);
         setMediaType(button.media_type || 'image');
@@ -409,6 +347,7 @@ export default function ButtonArea({
 
       setButtons(updatedButtons);
     } else {
+      // وضع التحكم - اختيار الزر للتعديل
       setSelectedButton(button.id === selectedButton?.id ? null : button);
     }
   };
@@ -429,7 +368,7 @@ export default function ButtonArea({
           if (!originalButton) return button;
 
           return {
-            ...originalButton,
+            ...button, // الحفاظ على التغييرات الحالية
             media: button.media || originalButton.media,
             shape_details: {
               ...originalButton.shape_details,
@@ -440,7 +379,7 @@ export default function ButtonArea({
               ...(button.file_details || {}),
             },
             target_page: button.target_page || originalButton.target_page,
-            style: originalButton.style,
+            // عدم إعادة تعيين style لحفظ التغييرات
           };
         });
 
@@ -449,22 +388,8 @@ export default function ButtonArea({
     }
   }, [showControls, originalPages]);
 
-  useEffect(() => {
-    if (showControls) {
-      const resetButtons = buttons.map(button => ({
-        ...button,
-        color: button.color || '#ffffff',
-        text_color: button.text_color || '#000000',
-        name: button.name || `Button ${button.id}`,
-      }));
-      setButtons(resetButtons);
-    }
-  }, [showControls]);
-
   const saveAllPositions = async () => {
     try {
-      // console.log('Saving positions for all buttons...');
-
       const allButtons = pages.reduce((acc, page) => {
         return [...acc, ...page.buttons];
       }, []);
@@ -485,10 +410,8 @@ export default function ButtonArea({
             button: buttonId,
           };
 
-          // console.log(`Saving position for button ${buttonId}:`, positionData);
-
           await axios.patch(
-            `https://buttons-back.cowdly.com/api/button-positions/${pos.id}/`,
+            `https://buttons-api-production.up.railway.app/api/button-positions/${pos.id}/`,
             positionData,
             {
               headers: {
@@ -528,6 +451,7 @@ export default function ButtonArea({
       >
         عرض صفحة العميل
       </button>
+      
       <button
         onClick={toggleControls}
         disabled={isTimerRunning}
@@ -539,22 +463,24 @@ export default function ButtonArea({
       >
         {showControls ? 'إخفاء التحكمات' : 'إظهار التحكمات'}
       </button>
+      
       {hasUnsavedChanges && showControls && (
-<button
-  onClick={saveAllPositions}
-  className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md shadow-lg"
->
-  حفظ المواقع
-</button>
-
+        <button
+          onClick={saveAllPositions}
+          className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md shadow-lg"
+        >
+          حفظ المواقع
+        </button>
       )}
+
       <div className="relative h-full overflow-y-visible">
-        <div className="relative min-h-full pb-96 ">
+        <div className="relative min-h-full pb-96">
           <DndContext
             sensors={showControls ? sensors : []}
             onDragEnd={handleDragEnd}
             onDragStart={handleDragStart}
           >
+            {/* Grid Background */}
             <div
               className="absolute inset-0"
               style={{
@@ -581,8 +507,6 @@ export default function ButtonArea({
                 if (!showControls && button.is_active === false) {
                   return null;
                 }
-
-                const hasMedia = button.type === 'media' && button.media;
 
                 return (
                   <div
@@ -620,6 +544,7 @@ export default function ButtonArea({
                     onMouseEnter={() => handleMouseEnter(button)}
                     onMouseLeave={handleMouseLeave}
                   >
+                    {/* Hidden Button Indicator */}
                     {showControls && button.is_active === false && (
                       <div className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center z-10" title="هذا الزر مخفي">
                         <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -627,12 +552,8 @@ export default function ButtonArea({
                         </svg>
                       </div>
                     )}
-                    <div
-                      style={{
-                        position: 'relative',
-                        zIndex: 1,
-                      }}
-                    >
+
+                    <div style={{ position: 'relative', zIndex: 1 }}>
                       <SortableItem
                         id={button.id}
                         button={button}
@@ -643,6 +564,7 @@ export default function ButtonArea({
                       />
                     </div>
 
+                    {/* Media Preview */}
                     {button.type === 'media' && button.media && (
                       <div
                         className={`${
@@ -670,10 +592,12 @@ export default function ButtonArea({
                       </div>
                     )}
 
+                    {/* File Preview */}
                     {button.type === 'file' && button.file && (
                       <FilePreview fileUrl={button.file} />
                     )}
 
+                    {/* Button Details */}
                     {showControls && (
                       <ButtonDetails
                         button={button}
@@ -690,6 +614,7 @@ export default function ButtonArea({
         </div>
       </div>
 
+      {/* Modals */}
       {showModal && (
         <ImageModal
           imageUrl={selectedMedia}
@@ -708,4 +633,3 @@ export default function ButtonArea({
     </main>
   );
 }
- 

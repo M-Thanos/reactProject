@@ -80,7 +80,7 @@ const ButtonFooter = ({
 
   const exportToExcel = () => {
     if (!selectedButton) {
-      alert('من فضلك اختر زرًا!');
+      alert('من فضلك اختر زرًا');
       return;
     }
     const data = [
@@ -101,7 +101,7 @@ const ButtonFooter = ({
 
   const switchToPage = () => {
     if (!selectedButton) {
-      alert('من فضلك اختر زرًا!');
+      alert('من فضلك اختر زرًا');
       return;
     }
     setShowPagePopup(true);

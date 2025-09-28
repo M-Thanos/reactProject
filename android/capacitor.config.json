@@ -3,9 +3,9 @@
   "appName": "tailAdmin",
   "webDir": "dist",
   "android": {
-    "compileSdkVersion": 33,  
+    "compileSdkVersion": 35,
     "minSdkVersion": 21,      
-    "targetSdkVersion": 33,   
+    "targetSdkVersion": 35,
     "javaVersion": "18"       
   }
 }

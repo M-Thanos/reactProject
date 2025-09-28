@@ -1,5 +1,11 @@
 {
   "appId": "com.thanos",
   "appName": "tailAdmin",
-  "webDir": "dist"
+  "webDir": "dist",
+  "android": {
+    "compileSdkVersion": 33,  
+    "minSdkVersion": 21,      
+    "targetSdkVersion": 33,   
+    "javaVersion": "17"       
+  }
 }
