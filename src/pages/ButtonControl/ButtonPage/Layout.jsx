@@ -256,7 +256,7 @@ export default function Layout() {
         page_id: currentPageId,
         clicks: 0,
         background_color: '#3b82f6',
-        text_color: '#ffffff'
+        text_color: '#000000'
       };
 
       try {
