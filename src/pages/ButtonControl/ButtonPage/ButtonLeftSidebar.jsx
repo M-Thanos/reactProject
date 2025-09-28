@@ -58,7 +58,6 @@ const ButtonLeftSidebar = ({
 
   // تحديث الأزرار عند تغيير الصفحات
   useEffect(() => {
-    // دمج جميع الأزرار من جميع الصفحات في مصفوفة واحدة
     const combinedButtons = pages.reduce((acc, page) => {
       return [
         ...acc,
@@ -72,10 +71,6 @@ const ButtonLeftSidebar = ({
 
     // تحديث حالة الأزرار
     setAllButtonsState(combinedButtons);
-
-    // تسجيل سجل لتتبع التغييرات
-    // console.log(`Updated buttons list: ${combinedButtons.length} buttons`);
-    // console.log(`Controls are currently ${showControls ? 'shown' : 'hidden'}`);
   }, [pages, showControls]);
 
   const handleLinkButton = (targetButtonId) => {
@@ -127,7 +122,7 @@ const ButtonLeftSidebar = ({
 
     updateButton(selectedButton.id, updatedButton);
 
-    // تحديث في API
+    // API
     const formData = new FormData();
     formData.append('calculation', JSON.stringify(updatedButton.calculation));
 
@@ -159,14 +154,14 @@ const ButtonLeftSidebar = ({
       },
     };
 
-    // تحديث الزر في واجهة المستخدم
+    // تحديث الزر  م
     updateButton(selectedButton.id, updatedButton);
 
-    // تحديث الزر في API
+    // API
     const formData = new FormData();
     formData.append('timer', JSON.stringify(updatedButton.timer));
 
-    // إرسال التحديث إلى API
+    // POST API
     fetch(`https://buttons-api-production.up.railway.app/api/buttons/${selectedButton.id}/`, {
       method: 'PATCH',
       body: formData,
