@@ -604,10 +604,14 @@ export default function Layout() {
 
     const updatedData = {
       linked_buttons: targetButtonId,
+      calculation: {
+        type: selectedButton?.calculation?.type || 'add',
+        enabled: targetButtonId !== null,
+      },
     };
 
     updateButtonInAPI(selectedButton.id, updatedData);
-    toast.success('تم ربط الزر بنجاح');
+    toast.success(targetButtonId ? 'تم ربط الزر بنجاح' : 'تم إلغاء الربط');
   };
 
   // تنظيف المؤقتات القديمة
@@ -661,7 +665,7 @@ export default function Layout() {
         pauseOnFocusLoss
         draggable
         theme="colored"
-        className={'z-[9999999]'}
+        className="z-[99999]"
       />
 
       {!showControls && (
@@ -826,7 +830,7 @@ export default function Layout() {
       )}
 
       {showControls && showPagePopup && (
-        <div className="absolute inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[9999999999]">
+        <div className="absolute inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[99999]">
           <div className="bg-white p-5 rounded shadow-lg w-65">
             <h2 className="text-lg font-bold mb-4">اختر الصفحة</h2>
             <ul className="space-y-2">

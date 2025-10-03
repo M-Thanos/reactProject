@@ -20,7 +20,7 @@ const Rename = ({ selectedButton, onClose, updateButton, setSelectedButton }) =>
     // console.log('selectedButtonRename', selectedButton);
 
     return (
-        <div className="absolute z-999999 top-0 left-0 w-full h-full bg-black bg-opacity-90">
+        <div className="absolute z-[9998] top-0 left-0 w-full h-full bg-black bg-opacity-90">
             <div className="fixed inset-0 flex justify-center items-center">
                 <div className="bg-white dark:bg-gray-900 p-6 rounded shadow-lg w-full max-w-md">
                     <h2 className="text-xl text-right font-bold mb-4">تغير اسم الزر </h2>

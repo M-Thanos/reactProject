@@ -4,7 +4,7 @@ import { useState } from 'react';
 
 const ImageModal = ({ imageUrl, onClose, mediaType }) => {
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-9999">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9998]">
       <div
         className="w-[95vw] lg:w-[50vw] absolute top-1/2 lg:left-1/2 left-[48.5%] -translate-x-1/2 -translate-y-1/2 
       bg-white dark:bg-gray-600 p-3 py-14 pb-8 rounded-lg"

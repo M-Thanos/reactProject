@@ -3,6 +3,7 @@ import { useRef, useEffect, useState } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { BsTrash } from 'react-icons/bs';
+import API_ENDPOINTS from '../../../config/api';
 
 const ButtonSidebar = ({
   toggleButtonSidebar,
@@ -20,7 +21,7 @@ const ButtonSidebar = ({
   const [showNewPageInput, setShowNewPageInput] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [pageToDelete, setPageToDelete] = useState(null);
-  const API_URL = 'https://buttons-api-production.up.railway.app/api/pages/';
+  const API_URL = `${API_ENDPOINTS.PAGES}/`;
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -42,37 +43,40 @@ const ButtonSidebar = ({
     }
 
     try {
-      const formData = new FormData();
-      formData.append('name', newPageName.trim());
-
       const response = await axios.post(
         API_URL, 
-        formData,
+        {
+          name: newPageName.trim(),
+          title: newPageName.trim(),
+        },
         {
           headers: {
-            'Content-Type': 'multipart/form-data',
+            'Content-Type': 'application/json',
           },
         }
       );
 
-      const newPage = {
-        ...response.data,
-        buttons: [],
-      };
-      
-      if (response.status === 201 || response.status === 200) {
+      if (response.data.success && response.data.data) {
+        const newPage = {
+          ...response.data.data,
+          buttons: [],
+        }; 
+        
         setPages((prevPages) => [...prevPages, newPage]);
         setNewPageName('');
         setShowNewPageInput(false);
         toast.success('تم إنشاء الصفحة بنجاح');
         
-        // تحديث البيانات
+        // تحديث البيانات من السيرفر
         const pagesResponse = await axios.get(API_URL);
-        setPages(pagesResponse.data);
+        if (pagesResponse.data.success && pagesResponse.data.data) {
+          setPages(pagesResponse.data.data);
+        }
       }
     } catch (error) {
       console.error('Error creating page:', error);
-      toast.error('حدث خطأ أثناء إنشاء الصفحة');
+      const errorMessage = error.response?.data?.message || 'حدث خطأ أثناء إنشاء الصفحة';
+      toast.error(errorMessage);
     }
   };
 
@@ -114,7 +118,7 @@ const ButtonSidebar = ({
       <aside
         ref={sidebarRef}
         className={`
-          fixed top-0 bottom-0 right-5 w-64 mt-20 bg-white dark:bg-gray-800 shadow-lg transform transition-all duration-300 ease-linear z-999999
+          fixed top-0 bottom-0 right-5 w-64 mt-20 bg-white dark:bg-gray-800 shadow-lg transform transition-all duration-300 ease-linear z-[9999]
           ${
             (showControls && showButtonSidebar) || (!showControls && sidebarStates?.right)
               ? 'translate-x-0'
@@ -219,7 +223,7 @@ const ButtonSidebar = ({
       </aside>
 
       {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-999999">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[99999]">
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-sm w-full mx-4 shadow-xl">
             <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white text-center">
               تأكيد الحذف

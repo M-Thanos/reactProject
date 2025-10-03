@@ -13,7 +13,7 @@ const NewPageForm = ({ onSubmit, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-99999">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[9998]">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-96 relative">
         {/* زر الإغلاق */}
         <button

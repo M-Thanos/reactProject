@@ -170,7 +170,7 @@ const ButtonNavbar = ({
           {showMenu && (
             //  
             <div
-              className={`xl:hidden flex z-99999
+              className={`xl:hidden flex z-[9998]
            absolute 
              mt-8 bg-white divide-y divide-gray-100 rounded-lg shadow w-64`}
             >

@@ -104,40 +104,28 @@ const ButtonLeftSidebar = ({
     toast.success('تم ربط الزر بنجاح');
   };
 
-  const handleCalculationTypeChange = (e) => {
+  const handleCalculationTypeChange = async (e) => {
     if (!selectedButton) {
       toast.warning('الرجاء اختيار زر أولاً');
       return;
     }
 
-    const updatedButton = {
-      ...selectedButton,
-      calculation: {
-        ...selectedButton.calculation,
-        type: e.target.value,
-        enabled: true,
-        displayResult: selectedButton?.calculation?.displayResult || false,
-      },
+    const calculationData = {
+      ...selectedButton.calculation,
+      type: e.target.value,
+      enabled: true,
+      displayResult: selectedButton?.calculation?.displayResult || false,
     };
 
-    updateButton(selectedButton.id, updatedButton);
-
-    // API
-    const formData = new FormData();
-    formData.append('calculation', JSON.stringify(updatedButton.calculation));
-
-    fetch(`https://buttons-api-production.up.railway.app/api/buttons/${selectedButton.id}/`, {
-      method: 'PATCH',
-      body: formData,
-    })
-      .then((response) => {
-        if (!response.ok) throw new Error('فشل تحديث نوع العملية');
-        return response.json();
-      })
-      .catch((error) => {
-        console.error('Error updating calculation type:', error);
-        toast.error('حدث خطأ أثناء تحديث نوع العملية');
+    try {
+      await updateButtonInAPI(selectedButton.id, {
+        calculation: calculationData,
       });
+      toast.success('تم تحديث نوع العملية بنجاح');
+    } catch (error) {
+      console.error('Error updating calculation type:', error);
+      toast.error('حدث خطأ أثناء تحديث نوع العملية');
+    }
   };
 
   const handleTimerUpdate = (timerData) => {
@@ -183,6 +171,21 @@ const ButtonLeftSidebar = ({
   const renderCalculationResults = () => {
     const processedPairs = new Set();
 
+    // رموز العمليات الحسابية
+    const operationSymbols = {
+      add: '+',
+      subtract: '-',
+      multiply: '×',
+      percentage: '%',
+    };
+
+    const operationNames = {
+      add: 'جمع',
+      subtract: 'طرح',
+      multiply: 'ضرب',
+      percentage: 'نسبة مئوية',
+    };
+
     return pages.map((page) => {
       return page.buttons.map((button) => {
         if (button.linked_buttons && button.calculation?.enabled) {
@@ -223,30 +226,44 @@ const ButtonLeftSidebar = ({
               result = 0;
           }
 
-          // console.log(`Calculation Result for ${button.name} and ${linkedButton.name}:`, result);
-
           return (
             <div
               key={pairId}
-              className="mb-4 bg-gray-100 dark:bg-gray-600 p-3 rounded"
+              className="mb-3 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-gray-700 dark:to-gray-600 p-3 rounded-lg border-l-4 border-blue-500 shadow-sm"
             >
-              <span>{button.calculation.type}</span>
-              <div className="flex justify-between items-center">
-                <span>{button.name}:</span>
+              {/* عنوان العملية */}
+              <div className="flex items-center justify-between mb-2 pb-2 border-b border-blue-200 dark:border-gray-500">
+                <span className="text-xs font-bold text-blue-700 dark:text-blue-300 uppercase">
+                  {operationNames[button.calculation.type]} ({operationSymbols[button.calculation.type]})
+                </span>
+              </div>
 
-                <span className="bg-blue-100 dark:bg-blue-900 px-2 py-1 rounded">
-                  {buttonClicks} نقرة
+              {/* الزر الأول */}
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                  {button.name}
+                </span>
+                <span className="bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-bold">
+                  {buttonClicks}
                 </span>
               </div>
-              <div className="flex justify-between items-center mt-2">
-                <span>{linkedButton.name}:</span>
-                <span className="bg-blue-100 dark:bg-blue-900 px-2 py-1 rounded">
-                  {linkedClicks} نقرة
+
+              {/* الزر الثاني */}
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                  {linkedButton.name}
+                </span>
+                <span className="bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-bold">
+                  {linkedClicks}
                 </span>
               </div>
-              <div className="flex justify-between items-center mt-2">
-                <span>النتيجة:</span>
-                <span className="font-bold text-blue-600 dark:text-blue-400">
+
+              {/* النتيجة */}
+              <div className="flex justify-between items-center mt-3 pt-2 border-t border-blue-200 dark:border-gray-500">
+                <span className="text-sm font-bold text-gray-800 dark:text-gray-100">
+                  النتيجة:
+                </span>
+                <span className="font-bold text-lg text-green-600 dark:text-green-400 bg-white dark:bg-gray-800 px-3 py-1 rounded-lg">
                   {result.toFixed(2)}{' '}
                   {button.calculation.type === 'percentage' ? '%' : ''}
                 </span>
@@ -340,7 +357,7 @@ const ButtonLeftSidebar = ({
   return (
     <aside
       className={`
-        fixed top-0 bottom-0 left-0 lg:left-0 w-64 mt-20 bg-white dark:bg-gray-800 shadow-lg transform transition-all duration-300 ease-linear z-9999
+        fixed top-0 bottom-0 left-0 lg:left-0 w-64 mt-20 bg-white dark:bg-gray-800 shadow-lg transform transition-all duration-300 ease-linear z-[9999]
         ${
           (showControls && showButtonLeftSidebar) ||
           (!showControls && sidebarStates?.left)
@@ -507,46 +524,6 @@ const ButtonLeftSidebar = ({
                 </div>
               </div>
 
-              {/* إضافة قسم إظهار/إخفاء الزر */}
-              {/* {selectedButton && (
-                <div className="bg-blue-50 dark:bg-gray-700 p-4 rounded-lg mb-4">
-                  <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-2">
-                    حالة الزر: {selectedButton.name}
-                  </h3>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gr{/* ay-600 dark:text-gray-300">
-                      الحالة الحالية:
-                    </span>
-                    <span
-                      className={`font-bold ${
-                        selectedButton.is_active
-                          ? 'text-green-600'
-                          : 'text-red-600'
-                      }`}
-                    >
-                      {selectedButton.is_active ? 'ظاهر' : 'مخفي'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center mt-2">
-                    <span className="text-gray-600 dark:text-gray-300">
-                      معرف الزر (ID):
-                    </span>
-                    <span className="font-bold text-blue-600 dark:text-blue-400">
-                      {selectedButton.id}
-                    </span>
-                  </div>
-                  <button
-                    onClick={handleToggleButtonVisibility}
-                    className={`w-full mt-3 ${
-                      selectedButton.is_active
-                        ? 'bg-red-500 hover:bg-red-600'
-                        : 'bg-green-500 hover:bg-green-600'
-                    } text-white py-2 px-4 rounded-lg flex items-center justify-center gap-2`}
-                  >
-                    {selectedButton.is_active ? 'إخفاء الزر' : 'إظهار الزر'}
-                  </button>
-                </div>
-              )} */}
 
               {/* إحصائيات */}
               <div className="bg-blue-50 dark:bg-gray-700 p-4 rounded-lg mb-4">
@@ -606,15 +583,19 @@ const ButtonLeftSidebar = ({
               </div>
 
               {/* قسم ربط الأزرار */}
-              <div className="bg-gray-50 dark:bg-gray-700 mt-4 p-1 rounded-lg">
-                <h3 className="text-sm font-semibold mb-3">
+              <div className="bg-blue-50 dark:bg-gray-700 mt-4 p-4 rounded-lg border-2 border-blue-200 dark:border-gray-600">
+                <h3 className="text-base font-bold mb-4 text-blue-900 dark:text-blue-300">
                   ربط الأزرار والعمليات الحسابية
                 </h3>
 
                 {/* زر ربط الأزرار */}
                 <button
                   onClick={() => setShowLinkButtons(true)}
-                  className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded mb-4 flex items-center justify-center gap-2"
+                  disabled={!selectedButton}
+                  className={`w-full py-2 px-4 rounded mb-4 flex items-center justify-center gap-2 transition-colors
+                    ${selectedButton 
+                      ? 'bg-blue-500 hover:bg-blue-600 text-white' 
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
                 >
                   <FaLink />
                   <span>ربط مع زر آخر</span>
@@ -622,24 +603,43 @@ const ButtonLeftSidebar = ({
 
                 {/* نوع العملية الحسابية */}
                 <div className="mb-4">
-                  <label className="block text-sm font-medium mb-2">
+                  <label className="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">
                     نوع العملية الحسابية:
                   </label>
                   <select
-                    value={selectedButton?.calculation?.type}
+                    value={selectedButton?.calculation?.type || 'add'}
                     onChange={handleCalculationTypeChange}
-                    className="w-full p-2 rounded border dark:bg-gray-600"
+                    disabled={!selectedButton || !selectedButton?.linked_buttons}
+                    className={`w-full p-2 rounded border-2 dark:bg-gray-600 dark:text-white
+                      ${selectedButton?.linked_buttons 
+                        ? 'border-blue-300 focus:border-blue-500' 
+                        : 'border-gray-300 bg-gray-100 cursor-not-allowed'}`}
                   >
                     <option value="add">جمع (+)</option>
                     <option value="subtract">طرح (-)</option>
                     <option value="multiply">ضرب (×)</option>
                     <option value="percentage">نسبة مئوية (%)</option>
                   </select>
+                  {!selectedButton?.linked_buttons && selectedButton && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      الرجاء ربط الزر أولاً لتفعيل العمليات الحسابية
+                    </p>
+                  )}
                 </div>
 
                 {/* عرض النتائج */}
-                <div className="h-[300px] overflow-y-auto w-full">
-                  {renderCalculationResults()}
+                <div className="mb-2">
+                  <h4 className="text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">
+                    نتائج العمليات الحسابية:
+                  </h4>
+                  <div className="max-h-[300px] overflow-y-auto w-full bg-white dark:bg-gray-800 p-2 rounded border border-gray-200 dark:border-gray-600">
+                    {renderCalculationResults()}
+                    {pages.flatMap(p => p.buttons).filter(b => b.linked_buttons && b.calculation?.enabled).length === 0 && (
+                      <p className="text-center text-gray-500 text-sm py-4">
+                        لا توجد عمليات حسابية مفعّلة
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
 

@@ -48,7 +48,7 @@ export default function ColorForm({
   };
 
   return (
-    <div className="w-full absolute inset-0 bg-black bg-opacity-50 flex justify-center items-center z-999999">
+    <div className="w-full absolute inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[9998]">
       <div className="bg-white dark:bg-gray-800 p-5 rounded shadow-lg w-[30%]">
         <h2 className="text-lg font-bold mb-4">تخصيص الألوان</h2>
         <div className="space-y-4">

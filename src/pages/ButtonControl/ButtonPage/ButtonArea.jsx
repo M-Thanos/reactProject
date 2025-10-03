@@ -122,7 +122,7 @@ const FilePreview = ({ fileUrl }) => {
       style={{ borderRadius: 'inherit', zIndex: 0 }}
     >
       <div className="absolute inset-0 bg-opacity-95 dark:bg-opacity-95" />
-      <div className="relative z-1">
+      <div className="relative z-10">
         <FileIcon fileType={fileType} />
         <div className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
           {fileUrl.split('/').pop()}
