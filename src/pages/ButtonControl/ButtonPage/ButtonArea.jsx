@@ -155,9 +155,18 @@ export default function ButtonArea({
   const [showFilePreview, setShowFilePreview] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [mediaType, setMediaType] = useState('image');
+  const [backgroundColor, setBackgroundColor] = useState(() => {
+    return localStorage.getItem('buttonAreaBgColor') || '#d1d5db';
+  });
+  const [showColorPicker, setShowColorPicker] = useState(false);
 
   const buttons = providedButtons || [];
   const navigate = useNavigate();
+
+  const handleBackgroundColorChange = (color) => {
+    setBackgroundColor(color);
+    localStorage.setItem('buttonAreaBgColor', color);
+  };
 
   const handleMouseEnter = (button) => {
     setHoveredButton(button);
@@ -201,18 +210,37 @@ export default function ButtonArea({
       try {
         const savedPositions = localStorage.getItem('buttonPositions');
         if (savedPositions) {
-          setPositions(JSON.parse(savedPositions));
+          const positions = JSON.parse(savedPositions);
+          // تنظيف المواقع: إزالة مواقع الأزرار المحذوفة
+          const allButtons = pages.reduce((acc, page) => {
+            return [...acc, ...page.buttons];
+          }, []);
+          const cleanedPositions = {};
+          Object.entries(positions).forEach(([buttonId, pos]) => {
+            if (allButtons.some(btn => btn.id === Number(buttonId))) {
+              cleanedPositions[buttonId] = pos;
+            }
+          });
+          setPositions(cleanedPositions);
+          localStorage.setItem('buttonPositions', JSON.stringify(cleanedPositions));
           return;
         }
   
         const response = await axios.get('https://buttons-api-production.up.railway.app/api/button-positions/');
         const positionsData = {};
+        const allButtons = pages.reduce((acc, page) => {
+          return [...acc, ...page.buttons];
+        }, []);
+        
         response.data.forEach((position) => {
-          positionsData[position.button] = {
-            x: position.x,
-            y: position.y,
-            id: position.id,
-          };
+          // فقط إضافة المواقع للأزرار الموجودة
+          if (allButtons.some(btn => btn.id === Number(position.button))) {
+            positionsData[position.button] = {
+              x: position.x,
+              y: position.y,
+              id: position.id,
+            };
+          }
         });
   
         setPositions(positionsData);
@@ -224,7 +252,7 @@ export default function ButtonArea({
     };
   
     fetchButtonPositions();
-  }, []);
+  }, [pages]);
 
   const handleDragEnd = async (event) => {
     const { active, delta } = event;
@@ -394,16 +422,21 @@ export default function ButtonArea({
         return [...acc, ...page.buttons];
       }, []);
 
+      // تنظيف المواقع قبل الحفظ: إزالة مواقع الأزرار المحذوفة
+      const cleanedPositions = {};
+      Object.entries(positions).forEach(([buttonId, pos]) => {
+        const button = allButtons.find((btn) => btn.id === Number(buttonId));
+        if (button && pos.id) {
+          cleanedPositions[buttonId] = pos;
+        }
+      });
+
+      // تحديث الـ state والـ localStorage بالمواقع النظيفة
+      setPositions(cleanedPositions);
+      localStorage.setItem('buttonPositions', JSON.stringify(cleanedPositions));
+
       await Promise.all(
-        Object.entries(positions).map(async ([buttonId, pos]) => {
-          if (!pos.id) {
-            console.error('Position ID is missing for button:', buttonId);
-            return;
-          }
-
-          const button = allButtons.find((btn) => btn.id === Number(buttonId));
-          if (!button) return;
-
+        Object.entries(cleanedPositions).map(async ([buttonId, pos]) => {
           const positionData = {
             x: Math.round(Number(pos.x) || 0),
             y: Math.round(Number(pos.y) || 0),
@@ -433,11 +466,12 @@ export default function ButtonArea({
   return (
     <main
       ref={containerRef}
-      className="relative overflow-visible mt-20 lg:mt-0 flex-1 p-6 dark:bg-gray-700 bg-gray-300 rounded-md"
+      className="relative overflow-visible mt-20 lg:mt-0 flex-1 p-6 rounded-md"
       style={{
         height: 'calc(70vh - 5rem)',
         overflowY: 'auto',
         overflowX: 'visible',
+        backgroundColor: backgroundColor,
       }}
     >
       <button
@@ -475,6 +509,19 @@ export default function ButtonArea({
       >
         قائمة المسوقين
       </button>
+
+      <button
+        onClick={() => setShowColorPicker(true)}
+        disabled={isTimerRunning}
+        className={`fixed top-4 left-[310px] lg:left-[52rem] z-50 text-white px-4 py-2 rounded-md shadow-lg ${
+          isTimerRunning
+            ? 'bg-gray-400 cursor-not-allowed'
+            : 'bg-purple-500 hover:bg-purple-600'
+        } ${clientButtonArea ? 'hidden' : ''}`}
+        title="تغيير لون الخلفية"
+      >
+        🎨 لون الخلفية
+      </button>
       
       {hasUnsavedChanges && showControls && (
         <button
@@ -499,15 +546,16 @@ export default function ButtonArea({
                 backgroundImage: `
                   repeating-linear-gradient(0deg, transparent, transparent ${
                     GRID_SIZE - 51
-                  }px, rgba(0,0,0,0.1) ${GRID_SIZE - 50}px),
+                  }px, rgba(0,0,0,0.15) ${GRID_SIZE - 50}px),
                   repeating-linear-gradient(90deg, transparent, transparent ${
                     GRID_SIZE + GRID_GAP - 1
-                  }px, rgba(0,0,0,0.1) ${GRID_SIZE + GRID_GAP}px)
+                  }px, rgba(0,0,0,0.15) ${GRID_SIZE + GRID_GAP}px)
                 `,
                 backgroundSize: `${GRID_SIZE + GRID_GAP}px ${GRID_SIZE - 50}px`,
                 pointerEvents: 'none',
                 minHeight: '200vh',
                 overflow: 'visible',
+                opacity: 0.8,
               }}
             />
 
@@ -527,7 +575,6 @@ export default function ButtonArea({
                     style={{
                       width: `${button.width || 160}px`,
                       minWidth: '160px',
-                      maxWidth: '300px',
                       position: 'absolute',
                       transform: positions[button.id]
                         ? `translate(${positions[button.id].x}px, ${
@@ -641,6 +688,81 @@ export default function ButtonArea({
           fileName={selectedFile.name}
           onClose={() => setShowFilePreview(false)}
         />
+      )}
+
+      {/* Color Picker Modal */}
+      {showColorPicker && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl p-6 max-w-md w-full mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold text-gray-800 dark:text-white">
+                اختر لون الخلفية
+              </h3>
+              <button
+                onClick={() => setShowColorPicker(false)}
+                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              {/* Color Input */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  اختر اللون:
+                </label>
+                <div className="flex gap-3 items-center">
+                  <input
+                    type="color"
+                    value={backgroundColor}
+                    onChange={(e) => handleBackgroundColorChange(e.target.value)}
+                    className="w-20 h-20 rounded-lg border-2 border-gray-300 dark:border-gray-600 cursor-pointer"
+                  />
+                  <div className="flex-1">
+                    <input
+                      type="text"
+                      value={backgroundColor}
+                      onChange={(e) => handleBackgroundColorChange(e.target.value)}
+                      className="w-full px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white font-mono"
+                      placeholder="#000000"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">اللون الحالي: {backgroundColor}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Preset Colors */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  ألوان جاهزة:
+                </label>
+                <div className="grid grid-cols-6 gap-2">
+                  {['#ffffff', '#f3f4f6', '#d1d5db', '#9ca3af', '#374151', '#1f2937', 
+                    '#fee2e2', '#fef3c7', '#d1fae5', '#dbeafe', '#e0e7ff', '#fce7f3'].map((color) => (
+                    <button
+                      key={color}
+                      onClick={() => handleBackgroundColorChange(color)}
+                      className={`w-full h-10 rounded-lg border-2 ${
+                        backgroundColor === color ? 'border-blue-500 shadow-lg' : 'border-gray-300'
+                      }`}
+                      style={{ backgroundColor: color }}
+                      title={color}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Close Button */}
+              <button
+                onClick={() => setShowColorPicker(false)}
+                className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg font-semibold transition-colors"
+              >
+                تم
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </main>
   );

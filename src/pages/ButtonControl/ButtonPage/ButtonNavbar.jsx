@@ -50,34 +50,7 @@ const ButtonNavbar = ({
       id: 1,
       name: 'حذف',
       icon: <MdDelete />,
-      action: () => {
-        if (!selectedButton) {
-          toast.warning('الرجاء اختيار زر أولاً');
-          return;
-        }
-
-        // تأكيد الحذف
-        if (window.confirm('هل أنت متأكد من حذف هذا الزر؟')) {
-          // حذف الزر من API
-          fetch(
-            `https://buttons-api-production.up.railway.app/api/buttons/${selectedButton.id}/`,
-            {
-              method: 'DELETE',
-            },
-          )
-            .then((response) => {
-              if (!response.ok) throw new Error('فشل حذف الزر');
-
-              // حذف الزر محلياً
-              deleteButton();
-              toast.success('تم حذف الزر بنجاح');
-            })
-            .catch((error) => {
-              console.error('Error deleting button:', error);
-              toast.error('حدث خطأ أثناء حذف الزر');
-            });
-        }
-      },
+      action: deleteButton, // استخدام دالة الحذف الممررة من Layout.jsx
     },
     {
       id: 2,

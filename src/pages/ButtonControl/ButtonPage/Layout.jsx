@@ -354,7 +354,31 @@ export default function Layout() {
         )
       ) {
         try {
+          // حذف الزر
           await axios.delete(`https://buttons-api-production.up.railway.app/api/buttons/${selectedButton.id}`);
+          
+          // حذف موقع الزر من قاعدة البيانات
+          try {
+            // الحصول على جميع المواقع والبحث عن موقع هذا الزر
+            const positionsResponse = await axios.get('https://buttons-api-production.up.railway.app/api/button-positions/');
+            const buttonPosition = positionsResponse.data.find(pos => pos.button == selectedButton.id);
+            
+            if (buttonPosition && buttonPosition.id) {
+              await axios.delete(`https://buttons-api-production.up.railway.app/api/button-positions/${buttonPosition.id}/`);
+            }
+          } catch (posError) {
+            console.warn('Error deleting button position:', posError);
+            // لا نريد إيقاف العملية إذا فشل حذف الموقع
+          }
+          
+          // تنظيف localStorage من موقع الزر المحذوف
+          const savedPositions = localStorage.getItem('buttonPositions');
+          if (savedPositions) {
+            const positions = JSON.parse(savedPositions);
+            delete positions[selectedButton.id];
+            localStorage.setItem('buttonPositions', JSON.stringify(positions));
+          }
+          
           await refreshData();
           setSelectedButton(null);
           toast.success('تم حذف الزر بنجاح');
