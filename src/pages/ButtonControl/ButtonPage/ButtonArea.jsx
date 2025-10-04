@@ -463,6 +463,18 @@ export default function ButtonArea({
       >
         {showControls ? 'إخفاء التحكمات' : 'إظهار التحكمات'}
       </button>
+
+      <button
+        onClick={() => navigate('/marketers-list')}
+        disabled={isTimerRunning}
+        className={`fixed top-4 left-[190px] lg:left-[41rem] z-50 text-white px-4 py-2 rounded-md shadow-lg ${
+          isTimerRunning
+            ? 'bg-gray-400 cursor-not-allowed'
+            : 'bg-green-500 hover:bg-green-800'
+        } ${clientButtonArea ? 'hidden' : ''}`}
+      >
+        قائمة المسوقين
+      </button>
       
       {hasUnsavedChanges && showControls && (
         <button

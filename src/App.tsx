@@ -7,6 +7,7 @@ import Loader from './common/Loader';
 import ButtonDashboard from './pages/ButtonControl/ButtonDashboard' ;
 import ButtonArea from './pages/ButtonControl/ButtonPage/ButtonArea';
 import ClientButtonArea from './pages/ButtonControl/ClientPage/ClientButtonArea';
+import MarketersListPage from './pages/MarketersListPage';
 
 import DefaultLayout from './layout/DefaultLayout';
 
@@ -33,6 +34,10 @@ function App() {
         <Route 
           path="/client" 
           element={<ClientButtonArea showControls={true} />} 
+        />
+        <Route 
+          path="/marketers-list" 
+          element={<MarketersListPage />} 
         />
       </Routes>
     </DefaultLayout>
