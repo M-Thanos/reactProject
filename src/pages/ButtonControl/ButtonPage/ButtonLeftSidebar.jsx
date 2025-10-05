@@ -26,6 +26,8 @@ const ButtonLeftSidebar = ({
   sidebarStates = { left: false },
   updateButtonInAPI,
 }) => {
+  console.log('🔍 ButtonLeftSidebar - handleButtonAction:', handleButtonAction);
+  
   // حساب إجمالي عدد الأزرار في جميع الصفحات
   const totalButtons = pages.reduce(
     (total, page) => total + (page.buttons?.length || 0),
@@ -48,18 +50,26 @@ const ButtonLeftSidebar = ({
 
   useEffect(() => {
     const handleClickOutside = (event) => {
+      // التحقق من أن النقر ليس على زر إضافة شكل جديد أو القائمة المنسدلة
+      const isShapeButton = event.target.closest('button')?.textContent?.includes('إضافة شكل جديد');
+      const isDropdownClick = event.target.closest('.shape-dropdown');
+      
       if (sidebarRef.current && !sidebarRef.current.contains(event.target)) {
         setShowButtonLeftSidebar(false);
       }
-      // إغلاق قائمة الأشكال عند النقر خارجها
-      setShowShapeDropdown(false);
+      
+      // إغلاق قائمة الأشكال فقط إذا كان النقر خارج الزر والقائمة
+      if (!isShapeButton && !isDropdownClick && showShapeDropdown) {
+        console.log('🚫 إغلاق القائمة المنسدلة');
+        setShowShapeDropdown(false);
+      }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [setShowButtonLeftSidebar]);
+  }, [setShowButtonLeftSidebar, showShapeDropdown]);
 
   // تحديث الأزرار عند تغيير الصفحات
   useEffect(() => {
@@ -556,7 +566,11 @@ const ButtonLeftSidebar = ({
               {/* زر إضافة شكل جديد */}
               <div className="mb-4">
                 <button
-                  onClick={() => setShowShapeDropdown(!showShapeDropdown)}
+                  onClick={() => {
+                    console.log('🔘 تم النقر على زر إضافة شكل جديد');
+                    console.log('📊 showShapeDropdown الحالي:', showShapeDropdown);
+                    setShowShapeDropdown(!showShapeDropdown);
+                  }}
                   className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg flex items-center justify-center gap-2"
                 >
                   <FaPlus />
@@ -565,10 +579,17 @@ const ButtonLeftSidebar = ({
                 
                 {/* قائمة الأشكال المنسدلة */}
                 {showShapeDropdown && (
-                  <div className="mt-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg">
+                  <div className="shape-dropdown mt-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg">
                     <button
                       onClick={() => {
-                        handleButtonAction?.addNew('triangle');
+                        console.log('🔺 تم النقر على مثلث');
+                        console.log('handleButtonAction:', handleButtonAction);
+                        if (handleButtonAction && handleButtonAction.addNew) {
+                          console.log('✅ استدعاء addNew مع triangle');
+                          handleButtonAction.addNew('triangle');
+                        } else {
+                          console.error('❌ handleButtonAction غير موجود!');
+                        }
                         setShowShapeDropdown(false);
                       }}
                       className="w-full text-right px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 border-b border-gray-200 dark:border-gray-600 flex items-center justify-between"

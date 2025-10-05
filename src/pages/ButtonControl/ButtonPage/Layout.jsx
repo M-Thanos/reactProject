@@ -183,11 +183,13 @@ export default function Layout() {
   // تحديث البيانات
   const refreshData = async () => {
     try {
+      console.log('🔄 جلب البيانات من API...');
       const response = await axios.get('https://buttons-api-production.up.railway.app/api/pages');
       const pagesData = response.data?.data || response.data || [];
+      console.log('📄 بيانات الصفحات المستلمة:', pagesData);
       
       if (!Array.isArray(pagesData)) {
-        console.error('Pages data is not an array during refresh:', pagesData);
+        console.error('❌ بيانات الصفحات ليست مصفوفة:', pagesData);
         return;
       }
 
@@ -224,9 +226,11 @@ export default function Layout() {
           }
         })
       );
+      console.log('📊 الصفحات مع الأزرار:', pagesWithButtons);
       setPages(pagesWithButtons);
+      console.log('✅ تم تحديث البيانات بنجاح');
     } catch (error) {
-      console.error('Error refreshing data:', error);
+      console.error('❌ خطأ في تحديث البيانات:', error);
     }
   };
 
@@ -265,11 +269,17 @@ export default function Layout() {
   // إجراءات الأزرار
   const handleButtonAction = {
     addNew: async (shapeType = 'square') => {
+      console.log('🚀 بدء إضافة شكل:', shapeType);
+      console.log('📄 الصفحة الحالية:', currentPageId);
+      console.log('📚 الصفحات المتاحة:', pages);
+      
       const currentPage = pages.find((page) => page.id === currentPageId);
       if (!currentPage) {
+        console.error('❌ لم يتم العثور على الصفحة الحالية');
         toast.error('الرجاء اختيار صفحة أولاً');
         return;
       }
+      console.log('✅ تم العثور على الصفحة:', currentPage);
 
       // تحديد خصائص الشكل حسب النوع
       const shapeConfigs = {
@@ -324,6 +334,7 @@ export default function Layout() {
       };
 
       const shapeConfig = shapeConfigs[shapeType] || shapeConfigs.square;
+      console.log('🔧 إعدادات الشكل:', shapeConfig);
 
       const newButton = {
         name: shapeConfig.name,
@@ -337,17 +348,21 @@ export default function Layout() {
         text_color: '#ffffff',
         shape_details: shapeConfig.shape_details
       };
+      console.log('📦 بيانات الزر الجديد:', newButton);
 
       try {
+        console.log('📤 إرسال البيانات إلى API...');
         const formData = new FormData();
         Object.entries(newButton).forEach(([key, value]) => {
           if (key === 'shape_details' && value) {
             formData.append(key, JSON.stringify(value));
+            console.log('📋 shape_details JSON:', JSON.stringify(value));
           } else {
             formData.append(key, value);
           }
         });
 
+        console.log('🌐 إرسال طلب POST إلى API...');
         const buttonResponse = await axios.post(
           'https://buttons-api-production.up.railway.app/api/buttons',
           formData,
@@ -357,6 +372,7 @@ export default function Layout() {
             },
           },
         );
+        console.log('✅ استجابة API:', buttonResponse.data);
 
         // إنشاء موقع للزر الجديد
         const buttonPosition = {
@@ -370,10 +386,13 @@ export default function Layout() {
           buttonPosition,
         );
 
+        console.log('🔄 تحديث البيانات...');
         await refreshData();
+        console.log('🎉 تم إضافة الشكل بنجاح!');
         toast.success(`تم إضافة ${shapeConfig.name} بنجاح`);
       } catch (error) {
-        console.error('Error creating button:', error);
+        console.error('❌ خطأ في إنشاء الزر:', error);
+        console.error('❌ تفاصيل الخطأ:', error.response?.data);
         toast.error('حدث خطأ أثناء إضافة الزر');
       }
     },
