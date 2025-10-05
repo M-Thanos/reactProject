@@ -510,11 +510,16 @@ export default function ButtonArea({
             console.log(`Position saved successfully for button ${buttonId}:`, response.data);
             return { buttonId, success: true, data: response.data };
           } catch (error) {
-            console.error(`Failed to save position for button ${buttonId}:`, error);
+            // هذا طبيعي للأزرار الجديدة - لا نحتاج لتسجيله كخطأ
+            if (error.response?.status === 404) {
+              console.log(`Position not found for button ${buttonId}, creating new one...`);
+            } else {
+              console.error(`Failed to save position for button ${buttonId}:`, error);
+            }
             
             // محاولة إنشاء موقع جديد إذا فشل التحديث
             try {
-              console.log(`Attempting to create new position for button ${buttonId}`);
+              console.log(`Creating new position for button ${buttonId}`);
               const createResponse = await axios.post(
                 'https://buttons-api-production.up.railway.app/api/button-positions/',
                 positionData,
@@ -526,10 +531,10 @@ export default function ButtonArea({
                 },
               );
               
-              console.log(`New position created for button ${buttonId}:`, createResponse.data);
+              console.log(`✅ New position created for button ${buttonId}:`, createResponse.data);
               return { buttonId, success: true, data: createResponse.data, created: true };
             } catch (createError) {
-              console.error(`Failed to create position for button ${buttonId}:`, createError);
+              console.error(`❌ Failed to create position for button ${buttonId}:`, createError);
               return { buttonId, success: false, error: createError };
             }
           }
