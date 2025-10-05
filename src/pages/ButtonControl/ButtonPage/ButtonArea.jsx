@@ -443,15 +443,19 @@ export default function ButtonArea({
             button: buttonId,
           };
 
-          await axios.patch(
+          console.log(`Saving position for button ${buttonId}:`, positionData);
+
+          const response = await axios.patch(
             `https://buttons-api-production.up.railway.app/api/button-positions/${pos.id}/`,
             positionData,
             {
               headers: {
-                'Content-Type': 'multipart/form-data',
+                'Content-Type': 'application/json',
               },
             },
           );
+
+          console.log(`Position saved successfully for button ${buttonId}:`, response.data);
         }),
       );
 
