@@ -55,9 +55,21 @@ export default function Layout() {
               );
               const buttonsData = buttonsResponse.data?.data || buttonsResponse.data || [];
               
+              // تحليل shape_details إذا كانت JSON string
+              const processedButtons = Array.isArray(buttonsData) ? buttonsData.map(btn => {
+                if (btn.shape_details && typeof btn.shape_details === 'string') {
+                  try {
+                    btn.shape_details = JSON.parse(btn.shape_details);
+                  } catch (e) {
+                    console.error('Error parsing shape_details:', e);
+                  }
+                }
+                return btn;
+              }) : [];
+              
               return {
                 ...page,
-                buttons: Array.isArray(buttonsData) ? buttonsData.filter(btn => btn.page_id == page.id) : []
+                buttons: processedButtons.filter(btn => btn.page_id == page.id)
               };
             } catch (error) {
               console.error(`Error fetching buttons for page ${page.id}:`, error);
@@ -188,9 +200,21 @@ export default function Layout() {
             );
             const buttonsData = buttonsResponse.data?.data || buttonsResponse.data || [];
             
+            // تحليل shape_details إذا كانت JSON string
+            const processedButtons = Array.isArray(buttonsData) ? buttonsData.map(btn => {
+              if (btn.shape_details && typeof btn.shape_details === 'string') {
+                try {
+                  btn.shape_details = JSON.parse(btn.shape_details);
+                } catch (e) {
+                  console.error('Error parsing shape_details:', e);
+                }
+              }
+              return btn;
+            }) : [];
+            
             return {
               ...page,
-              buttons: Array.isArray(buttonsData) ? buttonsData.filter(btn => btn.page_id == page.id) : []
+              buttons: processedButtons.filter(btn => btn.page_id == page.id)
             };
           } catch (error) {
             return {
@@ -240,29 +264,88 @@ export default function Layout() {
 
   // إجراءات الأزرار
   const handleButtonAction = {
-    addNew: async () => {
+    addNew: async (shapeType = 'square') => {
       const currentPage = pages.find((page) => page.id === currentPageId);
       if (!currentPage) {
         toast.error('الرجاء اختيار صفحة أولاً');
         return;
       }
 
+      // تحديد خصائص الشكل حسب النوع
+      const shapeConfigs = {
+        triangle: {
+          name: 'مثلث',
+          width: 80,
+          height: 80,
+          shape_details: {
+            type: 'triangle',
+            sides: 3,
+            style: {
+              clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)'
+            }
+          }
+        },
+        square: {
+          name: 'مربع',
+          width: 80,
+          height: 80,
+          shape_details: {
+            type: 'square',
+            sides: 4,
+            style: {
+              borderRadius: '0%'
+            }
+          }
+        },
+        rectangle: {
+          name: 'مستطيل',
+          width: 120,
+          height: 60,
+          shape_details: {
+            type: 'rectangle',
+            sides: 4,
+            style: {
+              borderRadius: '0%'
+            }
+          }
+        },
+        circle: {
+          name: 'دائرة',
+          width: 80,
+          height: 80,
+          shape_details: {
+            type: 'circle',
+            sides: 0,
+            style: {
+              borderRadius: '50%'
+            }
+          }
+        }
+      };
+
+      const shapeConfig = shapeConfigs[shapeType] || shapeConfigs.square;
+
       const newButton = {
-        name: `زر ${currentPage.buttons.length + 1}`,
+        name: shapeConfig.name,
         type: 'shape',
-        width: 160,
-        height: 50,
+        width: shapeConfig.width,
+        height: shapeConfig.height,
         is_active: true,
         page_id: currentPageId,
         clicks: 0,
         background_color: '#3b82f6',
-        text_color: '#000000'
+        text_color: '#ffffff',
+        shape_details: shapeConfig.shape_details
       };
 
       try {
         const formData = new FormData();
         Object.entries(newButton).forEach(([key, value]) => {
-          formData.append(key, value);
+          if (key === 'shape_details' && value) {
+            formData.append(key, JSON.stringify(value));
+          } else {
+            formData.append(key, value);
+          }
         });
 
         const buttonResponse = await axios.post(
@@ -288,7 +371,7 @@ export default function Layout() {
         );
 
         await refreshData();
-        toast.success('تم إضافة الزر بنجاح');
+        toast.success(`تم إضافة ${shapeConfig.name} بنجاح`);
       } catch (error) {
         console.error('Error creating button:', error);
         toast.error('حدث خطأ أثناء إضافة الزر');

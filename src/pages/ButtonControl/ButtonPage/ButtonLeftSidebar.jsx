@@ -38,6 +38,9 @@ const ButtonLeftSidebar = ({
   // إضافة state لتخزين الأزرار المجمعة
   const [allButtonsState, setAllButtonsState] = useState([]);
 
+  // إضافة state لعرض/إخفاء قائمة الأشكال
+  const [showShapeDropdown, setShowShapeDropdown] = useState(false);
+
   const sidebarRef = useRef();
 
   // إضافة useRef للاحتفاظ بالقيمة السابقة لـ showControls
@@ -48,6 +51,8 @@ const ButtonLeftSidebar = ({
       if (sidebarRef.current && !sidebarRef.current.contains(event.target)) {
         setShowButtonLeftSidebar(false);
       }
+      // إغلاق قائمة الأشكال عند النقر خارجها
+      setShowShapeDropdown(false);
     };
 
     document.addEventListener('mousedown', handleClickOutside);
@@ -548,14 +553,62 @@ const ButtonLeftSidebar = ({
                 </div>
               </div>
 
-              {/* زر إضافة زر جديد */}
-              <button
-                onClick={handleButtonAction?.addNew}
-                className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg mb-4 flex items-center justify-center gap-2"
-              >
-                <FaPlus />
-                <span>إضافة زر جديد</span>
-              </button>
+              {/* زر إضافة شكل جديد */}
+              <div className="mb-4">
+                <button
+                  onClick={() => setShowShapeDropdown(!showShapeDropdown)}
+                  className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg flex items-center justify-center gap-2"
+                >
+                  <FaPlus />
+                  <span>إضافة شكل جديد</span>
+                </button>
+                
+                {/* قائمة الأشكال المنسدلة */}
+                {showShapeDropdown && (
+                  <div className="mt-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg">
+                    <button
+                      onClick={() => {
+                        handleButtonAction?.addNew('triangle');
+                        setShowShapeDropdown(false);
+                      }}
+                      className="w-full text-right px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 border-b border-gray-200 dark:border-gray-600 flex items-center justify-between"
+                    >
+                      <span>🔺</span>
+                      <span>مثلث</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleButtonAction?.addNew('square');
+                        setShowShapeDropdown(false);
+                      }}
+                      className="w-full text-right px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 border-b border-gray-200 dark:border-gray-600 flex items-center justify-between"
+                    >
+                      <span>⬜</span>
+                      <span>مربع</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleButtonAction?.addNew('rectangle');
+                        setShowShapeDropdown(false);
+                      }}
+                      className="w-full text-right px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 border-b border-gray-200 dark:border-gray-600 flex items-center justify-between"
+                    >
+                      <span>⬛</span>
+                      <span>مستطيل</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleButtonAction?.addNew('circle');
+                        setShowShapeDropdown(false);
+                      }}
+                      className="w-full text-right px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-between"
+                    >
+                      <span>⭕</span>
+                      <span>دائرة</span>
+                    </button>
+                  </div>
+                )}
+              </div>
 
               {/* قائمة الصفحات */}
               <div className="mt-4">

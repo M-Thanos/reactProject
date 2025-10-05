@@ -685,7 +685,7 @@ export default function ButtonArea({
                     id={`button-${button.id}`}
                     style={{
                       width: `${button.width || 160}px`,
-                      minWidth: '160px',
+                      minWidth: '80px',
                       position: 'absolute',
                       transform: positions[button.id]
                         ? `translate(${positions[button.id].x}px, ${

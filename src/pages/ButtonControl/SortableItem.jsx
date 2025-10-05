@@ -56,23 +56,57 @@ export default function SortableItem({ id, button, onClick, selectedButton, show
       transform: CSS.Transform.toString(transform),
       transition,
       height: button.height,
-      backgroundColor: button.color || '#ffffff',
-      color: button.text_color || '#000000',
-      fontSize: '16px',
-      borderRadius: '4px'
+      backgroundColor: button.background_color || button.color || '#3b82f6',
+      color: button.text_color || '#ffffff',
+      fontSize: '14px',
+      borderRadius: '4px',
+      width: button.width || 160,
+      minWidth: '80px',
+      minHeight: '40px'
     };
+
+    // تطبيق أنماط الشكل المخصص إذا كانت موجودة
+    if (button.shape_details && button.type === 'shape') {
+      const shapeStyle = button.shape_details.style || {};
+      
+      // تطبيق أنماط الشكل
+      if (shapeStyle.clipPath) {
+        defaultStyles.clipPath = shapeStyle.clipPath;
+      }
+      if (shapeStyle.borderRadius) {
+        defaultStyles.borderRadius = shapeStyle.borderRadius;
+      }
+      
+      // تطبيق الألوان من shape_details إذا كانت موجودة
+      if (button.shape_details.background_color) {
+        defaultStyles.backgroundColor = button.shape_details.background_color;
+      }
+      if (button.shape_details.text_color) {
+        defaultStyles.color = button.shape_details.text_color;
+      }
+      if (button.shape_details.font_size) {
+        defaultStyles.fontSize = `${button.shape_details.font_size}px`;
+      }
+    }
 
     // في وضع التحكم
     if (showControls) {
-      return {
+      const selectedStyle = {
         ...defaultStyles,
         backgroundColor: selectedButton?.id === button.id
           ? '#4ade80'
-          : (button.is_fixed ? 'gray' : button.color || '#ffffff'),
+          : (button.is_fixed ? 'gray' : defaultStyles.backgroundColor),
         color: selectedButton?.id === button.id
           ? '#000'
-          : (button.is_fixed ? '#fff' : button.text_color || '#000000'),
+          : (button.is_fixed ? '#fff' : defaultStyles.color),
       };
+      
+      // الحفاظ على clipPath في وضع التحكم إذا كان موجوداً
+      if (defaultStyles.clipPath) {
+        selectedStyle.clipPath = defaultStyles.clipPath;
+      }
+      
+      return selectedStyle;
     }
 
     // في وضع إخفاء التحكمات - نحتفظ بالشكل الأساسي
@@ -80,7 +114,7 @@ export default function SortableItem({ id, button, onClick, selectedButton, show
   };
 
   // النص الأساسي للزر
-  const buttonText = button.name || `Button ${button.id}`;
+  const buttonText = button.shape_details?.text || button.name || `شكل ${button.id}`;
 
   return (
     <button

@@ -289,7 +289,7 @@ const ButtonFooter = ({
           text_color: formData.get('textColor') || '#000',
           text: formData.get('text') || 'Click me',
           font_size: formData.get('fontSize') || 16,
-          border_radius: null,
+          border_radius: formData.get('borderRadius') || 0,
           type: '',
           action: {
             id: actionId,
