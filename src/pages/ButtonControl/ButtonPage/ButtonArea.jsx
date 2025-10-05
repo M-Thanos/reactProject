@@ -424,18 +424,68 @@ export default function ButtonArea({
 
       // تنظيف المواقع قبل الحفظ: إزالة مواقع الأزرار المحذوفة
       const cleanedPositions = {};
+      const positionsToCreate = [];
+      
       Object.entries(positions).forEach(([buttonId, pos]) => {
         const button = allButtons.find((btn) => btn.id === Number(buttonId));
-        if (button && pos.id) {
-          cleanedPositions[buttonId] = pos;
+        if (button) {
+          if (pos.id) {
+            // موقع موجود في قاعدة البيانات
+            cleanedPositions[buttonId] = pos;
+          } else {
+            // موقع جديد يحتاج إنشاء
+            positionsToCreate.push({ buttonId, pos });
+          }
         }
       });
 
-      // تحديث الـ state والـ localStorage بالمواقع النظيفة
+      console.log('All buttons:', allButtons);
+      console.log('Current positions:', positions);
+      console.log('Cleaned positions to save:', cleanedPositions);
+      console.log('Positions to create:', positionsToCreate);
+
+
+      // إنشاء المواقع الجديدة أولاً
+      for (const { buttonId, pos } of positionsToCreate) {
+        try {
+          const positionData = {
+            x: Math.round(Number(pos.x) || 0),
+            y: Math.round(Number(pos.y) || 0),
+            button: buttonId,
+          };
+
+          console.log(`Creating new position for button ${buttonId}:`, positionData);
+
+          const createResponse = await axios.post(
+            'https://buttons-api-production.up.railway.app/api/button-positions/',
+            positionData,
+            {
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              timeout: 10000,
+            },
+          );
+
+          console.log(`New position created for button ${buttonId}:`, createResponse.data);
+          
+          // إضافة الموقع الجديد إلى cleanedPositions
+          cleanedPositions[buttonId] = {
+            ...pos,
+            id: createResponse.data.id
+          };
+        } catch (error) {
+          console.error(`Failed to create position for button ${buttonId}:`, error);
+          throw new Error(`فشل في إنشاء موقع للزر ${buttonId}`);
+        }
+      }
+
+      // تحديث الـ state والـ localStorage بالمواقع المحدثة
       setPositions(cleanedPositions);
       localStorage.setItem('buttonPositions', JSON.stringify(cleanedPositions));
 
-      await Promise.all(
+      // محاولة الحفظ مع معالجة الأخطاء لكل زر
+      const saveResults = await Promise.allSettled(
         Object.entries(cleanedPositions).map(async ([buttonId, pos]) => {
           const positionData = {
             x: Math.round(Number(pos.x) || 0),
@@ -445,25 +495,77 @@ export default function ButtonArea({
 
           console.log(`Saving position for button ${buttonId}:`, positionData);
 
-          const response = await axios.patch(
-            `https://buttons-api-production.up.railway.app/api/button-positions/${pos.id}/`,
-            positionData,
-            {
-              headers: {
-                'Content-Type': 'application/json',
+          try {
+            const response = await axios.patch(
+              `https://buttons-api-production.up.railway.app/api/button-positions/${pos.id}/`,
+              positionData,
+              {
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                timeout: 10000, // 10 seconds timeout
               },
-            },
-          );
+            );
 
-          console.log(`Position saved successfully for button ${buttonId}:`, response.data);
+            console.log(`Position saved successfully for button ${buttonId}:`, response.data);
+            return { buttonId, success: true, data: response.data };
+          } catch (error) {
+            console.error(`Failed to save position for button ${buttonId}:`, error);
+            
+            // محاولة إنشاء موقع جديد إذا فشل التحديث
+            try {
+              console.log(`Attempting to create new position for button ${buttonId}`);
+              const createResponse = await axios.post(
+                'https://buttons-api-production.up.railway.app/api/button-positions/',
+                positionData,
+                {
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  timeout: 10000,
+                },
+              );
+              
+              console.log(`New position created for button ${buttonId}:`, createResponse.data);
+              return { buttonId, success: true, data: createResponse.data, created: true };
+            } catch (createError) {
+              console.error(`Failed to create position for button ${buttonId}:`, createError);
+              return { buttonId, success: false, error: createError };
+            }
+          }
         }),
       );
+
+      // فحص النتائج
+      const failedSaves = saveResults.filter(result => 
+        result.status === 'rejected' || (result.status === 'fulfilled' && !result.value.success)
+      );
+
+      if (failedSaves.length > 0) {
+        console.error('Some positions failed to save:', failedSaves);
+        throw new Error(`${failedSaves.length} من الأزرار فشل في حفظ مواقعها`);
+      }
 
       toast.success('تم حفظ مواقع جميع الأزرار بنجاح');
       setHasUnsavedChanges(false);
     } catch (error) {
       console.error('Error saving button positions:', error);
-      toast.error('حدث خطأ أثناء حفظ مواقع الأزرار');
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        statusText: error.response?.statusText
+      });
+      
+      if (error.response?.status === 404) {
+        toast.error('خطأ: لم يتم العثور على موقع الزر في قاعدة البيانات');
+      } else if (error.response?.status === 500) {
+        toast.error('خطأ في الخادم: يرجى المحاولة مرة أخرى');
+      } else if (error.code === 'NETWORK_ERROR' || !error.response) {
+        toast.error('خطأ في الاتصال بالخادم: تحقق من اتصال الإنترنت');
+      } else {
+        toast.error(`حدث خطأ أثناء حفظ مواقع الأزرار: ${error.response?.data?.message || error.message}`);
+      }
     }
   };
 
