@@ -516,11 +516,8 @@ export default function Layout() {
     }
   };
 
-  const addMedia = () => {
-    if (!selectedButton) {
-      toast.warning('من فضلك اختر زرًا!');
-      return;
-    }
+  // إضافة وسائط مستقلة (بدون زر)
+  const addStandaloneMedia = () => {
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
     fileInput.accept = 'image/*,video/*,audio/*';
@@ -528,12 +525,89 @@ export default function Layout() {
       const file = e.target.files[0];
       if (file) {
         try {
-          // عرض رسالة تحميل
-          const loadingToast = toast.loading('جاري رفع الملف...');
+          const loadingToast = toast.loading('جاري رفع الوسائط...');
 
           // رفع الوسائط إلى Firebase Storage
           const uploadedFile = await uploadMedia(file, (progress) => {
-            // يمكن عرض نسبة التقدم هنا
+            console.log(`نسبة الرفع: ${Math.round(progress)}%`);
+          });
+
+          console.log('✅ تم رفع الوسائط:', uploadedFile);
+
+          // إنشاء "زر" خاص بالوسائط فقط
+          const mediaData = {
+            name: uploadedFile.fileName,
+            type: 'standalone-media', // نوع جديد للوسائط المستقلة
+            width: file.type.startsWith('image/') ? 300 : 400,
+            height: file.type.startsWith('image/') ? 200 : 300,
+            isActive: true,
+            is_active: true,
+            pageId: currentPageId,
+            page_id: currentPageId,
+            media: uploadedFile.url,
+            mediaType: uploadedFile.mediaType,
+            media_type: uploadedFile.mediaType,
+            fileName: uploadedFile.fileName,
+            file_name: uploadedFile.fileName,
+            filePath: uploadedFile.path,
+            file_path: uploadedFile.path,
+            backgroundColor: 'transparent',
+            background_color: 'transparent',
+            textColor: '#ffffff',
+            text_color: '#ffffff',
+          };
+
+          const createdMedia = await addButton(mediaData);
+          console.log('✅ تم إنشاء الوسائط:', createdMedia);
+
+          // إنشاء موقع للوسائط
+          const mediaPosition = {
+            x: 50,
+            y: 50,
+            buttonId: createdMedia.id,
+            button: createdMedia.id,
+          };
+
+          await addButtonPosition(mediaPosition);
+          
+          toast.dismiss(loadingToast);
+          await refreshData();
+          toast.success('تم إضافة الوسائط بنجاح');
+        } catch (error) {
+          console.error('❌ خطأ في رفع الوسائط:', error);
+          toast.error(error.message || 'حدث خطأ أثناء رفع الوسائط');
+        }
+      }
+    };
+    fileInput.click();
+  };
+
+  // إضافة وسائط لزر محدد (مع دمج)
+  const addMedia = () => {
+    if (!selectedButton) {
+      // إذا لم يكن هناك زر محدد، اسأل المستخدم
+      const choice = window.confirm(
+        'لا يوجد زر محدد. هل تريد إضافة الوسائط كعنصر مستقل؟\n\nنعم = وسائط مستقلة\nلا = اختر زر أولاً'
+      );
+      
+      if (choice) {
+        addStandaloneMedia();
+      } else {
+        toast.warning('من فضلك اختر زرًا أولاً أو أضف الوسائط كعنصر مستقل');
+      }
+      return;
+    }
+
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*,video/*,audio/*';
+    fileInput.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        try {
+          const loadingToast = toast.loading('جاري رفع الملف...');
+
+          const uploadedFile = await uploadMedia(file, (progress) => {
             console.log(`نسبة الرفع: ${Math.round(progress)}%`);
           });
 
@@ -553,9 +627,8 @@ export default function Layout() {
 
           await updateButtonInAPI(selectedButton.id, updatedData);
           
-          // إخفاء رسالة التحميل وعرض رسالة النجاح
           toast.dismiss(loadingToast);
-          toast.success('تم إضافة الوسائط بنجاح');
+          toast.success('تم إضافة الوسائط للزر بنجاح');
         } catch (error) {
           console.error('❌ خطأ في رفع الوسائط:', error);
           toast.error(error.message || 'حدث خطأ أثناء رفع الوسائط');
@@ -834,6 +907,7 @@ export default function Layout() {
             <ButtonFooter
               showControls={showControls}
               addMedia={addMedia}
+              addStandaloneMedia={addStandaloneMedia}
               toggleButtonSidebar={toggleButtonSidebar}
               showButtonSidebar={showButtonSidebar}
               onMeasurementClick={handleMeasurementClick}

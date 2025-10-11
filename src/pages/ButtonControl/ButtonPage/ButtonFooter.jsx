@@ -19,6 +19,7 @@ const ButtonFooter = ({
   updateButtonInAPI,
   handleFooterAction,
   addMedia,
+  addStandaloneMedia,
   changeShape,
   handleShapeChange,
   handleFileUpload,
@@ -338,11 +339,17 @@ const ButtonFooter = ({
     },
     {
       id: 2,
-      name: 'اضافه صوره او فيديو',
+      name: 'إضافة وسائط مستقلة',
+      icon: <FaPlus />,
+      action: addStandaloneMedia,
+      className: 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600',
+    },
+    {
+      id: 3,
+      name: 'دمج وسائط مع زر',
       icon: <GiMove />,
       action: addMedia,
     },
-
     {
       id: 4,
       name: 'تحويل شكل جديد',
@@ -398,14 +405,11 @@ const ButtonFooter = ({
             {buttons.map((button, index) => (
               <li key={index}>
                 <button
-                  // ${
-                  //   selectedButton?.isActive
-                  //     ? 'bg-blue-600 text-white hover:bg-blue-700'
-                  //     : 'bg-gray-300 text-gray-600 cursor-not-allowed'
-                  // }
                   onClick={button.action}
-                  // disabled={!selectedButton?.isActive}
-                  className={`flex items-center gap-2 px-4 py-2 rounded  bg-blue-600 text-white hover:bg-blue-700`}
+                  className={`flex items-center gap-2 px-4 py-2 rounded text-white transition-all ${
+                    button.className || 'bg-blue-600 hover:bg-blue-700'
+                  }`}
+                  title={button.name}
                 >
                   {button.icon} {button.name}
                 </button>
@@ -437,7 +441,11 @@ const ButtonFooter = ({
                   <li className="p-2" key={index}>
                     <button
                       onClick={button.action}
-                      className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded"
+                      className={`flex items-center gap-2 px-4 py-2 rounded w-full text-right ${
+                        button.className 
+                          ? `${button.className} text-white` 
+                          : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                      }`}
                     >
                       {button.icon} {button.name}
                     </button>

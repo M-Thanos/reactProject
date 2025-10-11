@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import axios from 'axios';
+import Flatpickr from 'react-flatpickr';
+import 'flatpickr/dist/themes/material_blue.css';
 import { 
   FaPlus, 
   FaEdit, 
@@ -14,10 +15,17 @@ import {
   FaPercentage,
   FaToggleOn,
   FaToggleOff,
-  FaTimes
+  FaTimes,
+  FaCalendarAlt,
+  FaClock,
 } from 'react-icons/fa';
-
-const API_BASE_URL = 'https://buttons-api-production.up.railway.app/api';
+import {
+  getAllMarketers,
+  addMarketer,
+  updateMarketer,
+  deleteMarketer,
+  validateDiscountCode,
+} from '../config/firestore';
 
 const MarketersListPage = () => {
   const navigate = useNavigate();
@@ -33,30 +41,22 @@ const MarketersListPage = () => {
     discount_value: 0,
     operation_type: '%',
     calculation_type: '+', // للعمليات الحسابية عند اختيار قيمة ثابتة
-    is_active: true
+    is_active: true,
+    start_date: '', // تاريخ بدء الكود
+    end_date: '', // تاريخ انتهاء الكود
   });
 
-  // جلب المسوقين من API
+  // جلب المسوقين من Firestore
   const fetchMarketers = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_BASE_URL}/marketers`);
-      console.log('API Response:', response.data); // للتحقق من البيانات
-      
-      // التأكد من أن البيانات array
-      let data = [];
-      if (Array.isArray(response.data)) {
-        data = response.data;
-      } else if (response.data?.data && Array.isArray(response.data.data)) {
-        // إذا كانت البيانات في {success: true, data: [...]}
-        data = response.data.data;
-      }
-      
-      setMarketers(data);
+      const data = await getAllMarketers();
+      console.log('Firestore Marketers:', data);
+      setMarketers(data || []);
     } catch (error) {
-      console.error('Error fetching marketers:', error);
+      console.error('❌ خطأ في جلب المسوقين:', error);
       toast.error('حدث خطأ في جلب البيانات');
-      setMarketers([]); // تعيين array فارغ في حالة الخطأ
+      setMarketers([]);
     } finally {
       setLoading(false);
     }
@@ -78,7 +78,9 @@ const MarketersListPage = () => {
         discount_value: marketer.discount_value,
         operation_type: marketer.operation_type,
         calculation_type: marketer.calculation_type || '+',
-        is_active: marketer.is_active
+        is_active: marketer.is_active,
+        start_date: marketer.start_date || marketer.startDate || '',
+        end_date: marketer.end_date || marketer.endDate || '',
       });
     } else {
       setEditingMarketer(null);
@@ -90,7 +92,9 @@ const MarketersListPage = () => {
         discount_value: 0,
         operation_type: '%',
         calculation_type: '+',
-        is_active: true
+        is_active: true,
+        start_date: '',
+        end_date: '',
       });
     }
     setShowModal(true);
@@ -108,7 +112,9 @@ const MarketersListPage = () => {
       discount_value: 0,
       operation_type: '%',
       calculation_type: '+',
-      is_active: true
+      is_active: true,
+      start_date: '',
+      end_date: '',
     });
   };
 
@@ -122,59 +128,66 @@ const MarketersListPage = () => {
       return;
     }
 
+    // التحقق من التواريخ
+    if (formData.start_date && formData.end_date) {
+      const startDate = new Date(formData.start_date);
+      const endDate = new Date(formData.end_date);
+      
+      if (endDate < startDate) {
+        toast.error('تاريخ الانتهاء يجب أن يكون بعد تاريخ البدء');
+        return;
+      }
+    }
+
     try {
       const marketerData = {
         name: formData.name,
         email: formData.email,
         phone: formData.phone || '',
-        discount_code: formData.discount_code,
+        discount_code: formData.discount_code.toUpperCase(),
+        discountCode: formData.discount_code.toUpperCase(),
         discount_value: Number(formData.discount_value) || 0,
+        discountValue: Number(formData.discount_value) || 0,
         operation_type: formData.operation_type || '%',
-        is_active: formData.is_active !== false
+        operationType: formData.operation_type || '%',
+        is_active: formData.is_active !== false,
+        isActive: formData.is_active !== false,
+        start_date: formData.start_date || null,
+        startDate: formData.start_date || null,
+        end_date: formData.end_date || null,
+        endDate: formData.end_date || null,
       };
 
       // إضافة calculation_type فقط إذا كان operation_type = "fixed"
       if (formData.operation_type === 'fixed') {
         marketerData.calculation_type = formData.calculation_type || '+';
+        marketerData.calculationType = formData.calculation_type || '+';
       }
 
-      console.log('Sending marketer data:', marketerData); // للتحقق من البيانات المرسلة
+      console.log('💾 حفظ بيانات المسوق:', marketerData);
 
       if (editingMarketer) {
         // تحديث مسوق موجود
-        await axios.patch(`${API_BASE_URL}/marketers/${editingMarketer.id}`, marketerData, {
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
+        await updateMarketer(editingMarketer.id, marketerData);
         toast.success('تم تحديث بيانات المسوق بنجاح');
       } else {
         // إضافة مسوق جديد
-        await axios.post(`${API_BASE_URL}/marketers`, marketerData, {
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
+        await addMarketer(marketerData);
         toast.success('تم إضافة المسوق بنجاح');
       }
       
       fetchMarketers();
       handleCloseModal();
     } catch (error) {
-      console.error('Error saving marketer:', error);
-      if (error.response) {
-        console.error('Response data:', error.response.data);
-        console.error('Response status:', error.response.status);
-        
-        // معالجة خاصة لخطأ الإيميل المكرر
-        const errorMessage = error.response.data?.message || error.response.data?.error || '';
-        if (errorMessage.includes('email') || errorMessage.includes('البريد') || errorMessage.includes('الإيميل') || errorMessage.includes('فريد') || errorMessage.includes('مكرر')) {
-          toast.error('⚠️ هذا البريد الإلكتروني مسجل مسبقاً! الرجاء استخدام بريد آخر');
-        } else {
-          toast.error(`خطأ: ${errorMessage || 'حدث خطأ أثناء حفظ البيانات'}`);
-        }
+      console.error('❌ خطأ في حفظ المسوق:', error);
+      
+      // معالجة الأخطاء
+      if (error.message.includes('البريد') || error.message.includes('email')) {
+        toast.error('⚠️ هذا البريد الإلكتروني مسجل مسبقاً! الرجاء استخدام بريد آخر');
+      } else if (error.message.includes('كود') || error.message.includes('discount')) {
+        toast.error('⚠️ كود الخصم مستخدم بالفعل! الرجاء استخدام كود آخر');
       } else {
-        toast.error('حدث خطأ أثناء حفظ البيانات');
+        toast.error(`خطأ: ${error.message || 'حدث خطأ أثناء حفظ البيانات'}`);
       }
     }
   };
@@ -186,11 +199,11 @@ const MarketersListPage = () => {
     }
 
     try {
-      await axios.delete(`${API_BASE_URL}/marketers/${id}`);
+      await deleteMarketer(id);
       toast.success('تم حذف المسوق بنجاح');
       fetchMarketers();
     } catch (error) {
-      console.error('Error deleting marketer:', error);
+      console.error('❌ خطأ في حذف المسوق:', error);
       toast.error('حدث خطأ أثناء الحذف');
     }
   };
@@ -198,19 +211,39 @@ const MarketersListPage = () => {
   // تبديل حالة التفعيل
   const handleToggleActive = async (marketer) => {
     try {
-      await axios.patch(`${API_BASE_URL}/marketers/${marketer.id}`, {
-        is_active: !marketer.is_active
-      }, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
+      await updateMarketer(marketer.id, {
+        is_active: !marketer.is_active,
+        isActive: !marketer.is_active,
       });
       toast.success(marketer.is_active ? 'تم تعطيل المسوق' : 'تم تفعيل المسوق');
       fetchMarketers();
     } catch (error) {
-      console.error('Error toggling marketer status:', error);
+      console.error('❌ خطأ في تحديث الحالة:', error);
       toast.error('حدث خطأ أثناء تحديث الحالة');
     }
+  };
+
+  // التحقق من صلاحية الكود حسب التاريخ
+  const getCodeStatus = (marketer) => {
+    const now = new Date();
+    
+    // التحقق من تاريخ البدء
+    if (marketer.start_date || marketer.startDate) {
+      const startDate = new Date(marketer.start_date || marketer.startDate);
+      if (now < startDate) {
+        return { status: 'pending', text: 'لم يبدأ بعد', color: 'bg-yellow-100 text-yellow-800' };
+      }
+    }
+    
+    // التحقق من تاريخ الانتهاء
+    if (marketer.end_date || marketer.endDate) {
+      const endDate = new Date(marketer.end_date || marketer.endDate);
+      if (now > endDate) {
+        return { status: 'expired', text: 'منتهي', color: 'bg-red-100 text-red-800' };
+      }
+    }
+    
+    return { status: 'active', text: 'نشط', color: 'bg-green-100 text-green-800' };
   };
 
   return (
@@ -269,6 +302,9 @@ const MarketersListPage = () => {
                     <th className="px-6 py-4 text-right text-sm font-semibold">كود الخصم</th>
                     <th className="px-6 py-4 text-right text-sm font-semibold">قيمة الخصم</th>
                     <th className="px-6 py-4 text-right text-sm font-semibold">نوع العملية</th>
+                    <th className="px-6 py-4 text-right text-sm font-semibold">تاريخ البدء</th>
+                    <th className="px-6 py-4 text-right text-sm font-semibold">تاريخ الانتهاء</th>
+                    <th className="px-6 py-4 text-right text-sm font-semibold">حالة الكود</th>
                     <th className="px-6 py-4 text-right text-sm font-semibold">الحالة</th>
                     <th className="px-6 py-4 text-right text-sm font-semibold">الإجراءات</th>
                   </tr>
@@ -330,6 +366,36 @@ const MarketersListPage = () => {
                             </span>
                           )}
                         </div>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                        {(marketer.start_date || marketer.startDate) ? (
+                          <div className="flex items-center gap-2">
+                            <FaCalendarAlt className="text-blue-500" />
+                            <span>{new Date(marketer.start_date || marketer.startDate).toLocaleDateString('ar-SA')}</span>
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">غير محدد</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                        {(marketer.end_date || marketer.endDate) ? (
+                          <div className="flex items-center gap-2">
+                            <FaClock className="text-red-500" />
+                            <span>{new Date(marketer.end_date || marketer.endDate).toLocaleDateString('ar-SA')}</span>
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">غير محدد</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-sm">
+                        {(() => {
+                          const codeStatus = getCodeStatus(marketer);
+                          return (
+                            <span className={`px-3 py-1 rounded-full font-semibold ${codeStatus.color}`}>
+                              {codeStatus.text}
+                            </span>
+                          );
+                        })()}
                       </td>
                       <td className="px-6 py-4 text-sm">
                         <button
@@ -543,6 +609,81 @@ const MarketersListPage = () => {
                   </div>
                 </div>
               )}
+
+              {/* تواريخ البدء والانتهاء */}
+              <div className="bg-gradient-to-r from-green-50 to-blue-50 dark:from-gray-700 dark:to-gray-600 p-5 rounded-lg border-2 border-green-200 dark:border-green-600">
+                <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
+                  <FaCalendarAlt className="text-green-600" />
+                  فترة صلاحية الكود
+                </h3>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  {/* تاريخ البدء */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                      <FaCalendarAlt className="inline ml-2 text-green-600" />
+                      Start Date / تاريخ البدء
+                    </label>
+                    <Flatpickr
+                      value={formData.start_date}
+                      onChange={(dates) => {
+                        if (dates.length > 0) {
+                          const date = dates[0];
+                          const formattedDate = date.toISOString().split('T')[0];
+                          setFormData({ ...formData, start_date: formattedDate });
+                        } else {
+                          setFormData({ ...formData, start_date: '' });
+                        }
+                      }}
+                      options={{
+                        dateFormat: 'Y-m-d',
+                        locale: 'en',
+                        allowInput: true,
+                        altInput: true,
+                        altFormat: 'F j, Y',
+                      }}
+                      className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-green-500 focus:ring focus:ring-green-200 transition-all"
+                      placeholder="Select start date / اختر تاريخ البدء"
+                    />
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1" dir="rtl">
+                      اتركه فارغاً للبدء فوراً
+                    </p>
+                  </div>
+
+                  {/* تاريخ الانتهاء */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                      <FaClock className="inline ml-2 text-red-600" />
+                      End Date / تاريخ الانتهاء
+                    </label>
+                    <Flatpickr
+                      value={formData.end_date}
+                      onChange={(dates) => {
+                        if (dates.length > 0) {
+                          const date = dates[0];
+                          const formattedDate = date.toISOString().split('T')[0];
+                          setFormData({ ...formData, end_date: formattedDate });
+                        } else {
+                          setFormData({ ...formData, end_date: '' });
+                        }
+                      }}
+                      options={{
+                        dateFormat: 'Y-m-d',
+                        locale: 'en',
+                        allowInput: true,
+                        altInput: true,
+                        altFormat: 'F j, Y',
+                        minDate: formData.start_date || null,
+                      }}
+                      className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-red-500 focus:ring focus:ring-red-200 transition-all"
+                      placeholder="Select end date / اختر تاريخ الانتهاء"
+                    />
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1" dir="rtl">
+                      اتركه فارغاً للاستمرار بلا نهاية
+                    </p>
+                  </div>
+                </div>
+              </div>
 
               {/* حالة التفعيل */}
               <div className="flex items-center gap-3">

@@ -35,3 +35,16 @@
 [data-dragging='true'] * {
   cursor: grabbing !important;
 } */
+
+/* إصلاح اتجاه حقول التاريخ */
+input[type="date"] {
+  direction: ltr !important;
+  text-align: left !important;
+  unicode-bidi: plaintext !important;
+}
+
+input[type="date"]::-webkit-datetime-edit,
+input[type="date"]::-webkit-inner-spin-button,
+input[type="date"]::-webkit-calendar-picker-indicator {
+  direction: ltr !important;
+}

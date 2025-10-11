@@ -332,7 +332,7 @@ export default function ButtonArea({
       }
 
       // معالجة الوسائط والملفات
-      if (button.type === 'media' && button.media) {
+      if ((button.type === 'media' || button.type === 'standalone-media') && button.media) {
         setSelectedMedia(button.media);
         setMediaType(button.media_type || 'image');
         setShowModal(true);
@@ -687,17 +687,19 @@ export default function ButtonArea({
                     </div>
 
                     {/* Media Preview */}
-                    {button.type === 'media' && button.media && (
+                    {(button.type === 'media' || button.type === 'standalone-media') && button.media && (
                       <div
                         className={`${
-                          showControls
+                          button.type === 'standalone-media' 
+                            ? 'absolute inset-0' 
+                            : showControls
                             ? 'absolute left-0 right-0 bg-white dark:bg-gray-800'
                             : ''
                         } overflow-hidden`}
                         style={{
-                          top: showControls ? '100%' : '0',
-                          marginTop: showControls ? '8px' : '0',
-                          position: showControls ? 'absolute' : 'relative',
+                          top: button.type === 'standalone-media' ? '0' : showControls ? '100%' : '0',
+                          marginTop: button.type === 'standalone-media' ? '0' : showControls ? '8px' : '0',
+                          position: button.type === 'standalone-media' ? 'absolute' : showControls ? 'absolute' : 'relative',
                         }}
                       >
                         <MediaPreview
@@ -707,7 +709,7 @@ export default function ButtonArea({
                             position: 'relative',
                             width: '100%',
                             height: '100%',
-                            objectFit: 'contain',
+                            objectFit: button.type === 'standalone-media' ? 'cover' : 'contain',
                             padding: 0,
                           }}
                         />
