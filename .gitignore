@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+src/config/firebase.js
+src/config/firestore.js
+src/config/storage.js
+storage.rules
+firestore.rules

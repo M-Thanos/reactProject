@@ -1,9 +1,13 @@
 import { FaPlus, FaTimes } from 'react-icons/fa';
 import { useRef, useEffect, useState } from 'react';
-import axios from 'axios';
 import { toast } from 'react-toastify';
 import { BsTrash } from 'react-icons/bs';
-import API_ENDPOINTS from '../../../config/api';
+// استبدال axios و API_ENDPOINTS بـ Firestore
+import {
+  addPage,
+  deletePage,
+  getAllPages,
+} from '../../../config/firestore';
 
 const ButtonSidebar = ({
   toggleButtonSidebar,
@@ -21,7 +25,6 @@ const ButtonSidebar = ({
   const [showNewPageInput, setShowNewPageInput] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [pageToDelete, setPageToDelete] = useState(null);
-  const API_URL = `${API_ENDPOINTS.PAGES}/`;
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -43,40 +46,38 @@ const ButtonSidebar = ({
     }
 
     try {
-      const response = await axios.post(
-        API_URL, 
-        {
-          name: newPageName.trim(),
-          title: newPageName.trim(),
-        },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      const pageData = {
+        name: newPageName.trim(),
+        title: newPageName.trim(),
+        isActive: true,
+        is_active: true,
+        order: pages.length + 1,
+      };
 
-      if (response.data.success && response.data.data) {
-        const newPage = {
-          ...response.data.data,
-          buttons: [],
-        }; 
-        
-        setPages((prevPages) => [...prevPages, newPage]);
-        setNewPageName('');
-        setShowNewPageInput(false);
-        toast.success('تم إنشاء الصفحة بنجاح');
-        
-        // تحديث البيانات من السيرفر
-        const pagesResponse = await axios.get(API_URL);
-        if (pagesResponse.data.success && pagesResponse.data.data) {
-          setPages(pagesResponse.data.data);
-        }
+      const createdPage = await addPage(pageData);
+      console.log('✅ تم إنشاء الصفحة:', createdPage);
+
+      const newPage = {
+        ...createdPage,
+        buttons: [],
+      }; 
+      
+      setPages((prevPages) => [...prevPages, newPage]);
+      setNewPageName('');
+      setShowNewPageInput(false);
+      toast.success('تم إنشاء الصفحة بنجاح');
+      
+      // تحديث البيانات من Firestore
+      const allPages = await getAllPages();
+      if (allPages && Array.isArray(allPages)) {
+        setPages(allPages.map(page => ({
+          ...page,
+          buttons: page.buttons || []
+        })));
       }
     } catch (error) {
-      console.error('Error creating page:', error);
-      const errorMessage = error.response?.data?.message || 'حدث خطأ أثناء إنشاء الصفحة';
-      toast.error(errorMessage);
+      console.error('❌ خطأ في إنشاء الصفحة:', error);
+      toast.error('حدث خطأ أثناء إنشاء الصفحة');
     }
   };
 
@@ -94,7 +95,8 @@ const ButtonSidebar = ({
 
   const confirmDelete = async () => {
     try {
-      await axios.delete(`${API_URL}${pageToDelete}`);
+      await deletePage(pageToDelete);
+      console.log('✅ تم حذف الصفحة من Firestore');
       
       const updatedPages = pages.filter(page => page.id !== pageToDelete);
       setPages(updatedPages);
@@ -105,7 +107,7 @@ const ButtonSidebar = ({
 
       toast.success('تم حذف الصفحة بنجاح');
     } catch (error) {
-      console.error('Error deleting page:', error);
+      console.error('❌ خطأ في حذف الصفحة:', error);
       toast.error('حدث خطأ أثناء حذف الصفحة');
     } finally {
       setShowDeleteConfirm(false);

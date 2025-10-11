@@ -12,7 +12,22 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import NewPageForm from '../Form/NewPageForm';
 import LinkButtonsModal from './Form/LinkButtonsModal';
-import axios from 'axios';
+// استبدال axios بـ Firestore
+import {
+  getAllPagesWithButtons,
+  addPage,
+  addButton,
+  updateButton as updateButtonInFirestore,
+  deleteButton as deleteButtonFromFirestore,
+  addButtonPosition,
+  updateButtonPosition,
+  getButtonPositionById,
+} from '../../../config/firestore';
+// استيراد دوال Firebase Storage
+import {
+  uploadMedia,
+  uploadDocument,
+} from '../../../config/storage';
 
 export default function Layout() {
   const {
@@ -27,79 +42,57 @@ export default function Layout() {
 
   const [buttons, setButtons] = useState([]);
 
-  // جلب البيانات من API
+  // جلب البيانات من Firestore
   useEffect(() => {
     const fetchPages = async () => {
       try {
-        const response = await axios.get(
-          'https://buttons-api-production.up.railway.app/api/pages',
-        );
-        console.log('Pages response:', response.data);
+        console.log('🔄 جلب البيانات من Firestore...');
+        const pagesWithButtons = await getAllPagesWithButtons();
+        console.log('📄 بيانات الصفحات المستلمة:', pagesWithButtons);
         
-        // التحقق من وجود البيانات
-        const pagesData = response.data?.data || response.data || [];
-        
-        if (!Array.isArray(pagesData)) {
-          console.error('Pages data is not an array:', pagesData);
+        if (!Array.isArray(pagesWithButtons)) {
+          console.error('خطأ: البيانات ليست مصفوفة:', pagesWithButtons);
           toast.error('خطأ في تنسيق بيانات الصفحات');
           return;
         }
 
-        // تحديث البيانات للتطابق مع API
-        const pagesWithButtons = await Promise.all(
-          pagesData.map(async (page) => {
-            try {
-              const buttonsResponse = await axios.get(
-                `https://buttons-api-production.up.railway.app/api/buttons`,
-                { params: { page_id: page.id } }
-              );
-              const buttonsData = buttonsResponse.data?.data || buttonsResponse.data || [];
-              
-              // تحليل shape_details إذا كانت JSON string
-              const processedButtons = Array.isArray(buttonsData) ? buttonsData.map(btn => {
-                if (btn.shape_details && typeof btn.shape_details === 'string') {
-                  try {
-                    btn.shape_details = JSON.parse(btn.shape_details);
-                  } catch (e) {
-                    console.error('Error parsing shape_details:', e);
-                  }
-                }
-                return btn;
-              }) : [];
-              
-              return {
-                ...page,
-                buttons: processedButtons.filter(btn => btn.page_id == page.id)
-              };
-            } catch (error) {
-              console.error(`Error fetching buttons for page ${page.id}:`, error);
-              return {
-                ...page,
-                buttons: []
-              };
-            }
-          })
-        );
+        // تحويل التسمية من camelCase إلى snake_case لتوافق الكود الموجود
+        const formattedPages = pagesWithButtons.map((page) => ({
+          ...page,
+          is_active: page.isActive !== undefined ? page.isActive : true,
+          buttons: (page.buttons || []).map((btn) => ({
+            ...btn,
+            page_id: btn.pageId || page.id,
+            is_active: btn.isActive !== undefined ? btn.isActive : true,
+            background_color: btn.backgroundColor || btn.background_color || '#3b82f6',
+            text_color: btn.textColor || btn.text_color || '#ffffff',
+            shape_details: btn.shapeDetails || btn.shape_details || null,
+            linked_buttons: btn.linkedButtons || btn.linked_buttons || null,
+            target_page: btn.targetPage || btn.target_page || null,
+            media_type: btn.mediaType || btn.media_type || null,
+            is_fixed: btn.isFixed || btn.is_fixed || false,
+          })),
+        }));
 
-        setPages(pagesWithButtons);
+        setPages(formattedPages);
 
         // تعيين الصفحة الأولى كافتراضية
-        if (!currentPageId && pagesWithButtons.length > 0) {
-          setCurrentPageId(pagesWithButtons[0].id);
+        if (!currentPageId && formattedPages.length > 0) {
+          setCurrentPageId(formattedPages[0].id);
         }
       } catch (error) {
-        console.error('Error fetching pages:', error);
+        console.error('❌ خطأ في جلب الصفحات:', error);
         toast.error('حدث خطأ أثناء تحميل الصفحات');
         
         // إضافة صفحة افتراضية في حالة الخطأ
         setPages([{
-          id: 1,
+          id: 'default-page',
           name: 'الصفحة الرئيسية',
           title: 'الصفحة الرئيسية',
           is_active: true,
           buttons: []
         }]);
-        setCurrentPageId(1);
+        setCurrentPageId('default-page');
       }
     };
 
@@ -180,88 +173,66 @@ export default function Layout() {
     return remaining;
   };
 
-  // تحديث البيانات
+  // تحديث البيانات من Firestore
   const refreshData = async () => {
     try {
-      console.log('🔄 جلب البيانات من API...');
-      const response = await axios.get('https://buttons-api-production.up.railway.app/api/pages');
-      const pagesData = response.data?.data || response.data || [];
-      console.log('📄 بيانات الصفحات المستلمة:', pagesData);
+      console.log('🔄 تحديث البيانات من Firestore...');
+      const pagesWithButtons = await getAllPagesWithButtons();
+      console.log('📄 بيانات الصفحات المستلمة:', pagesWithButtons);
       
-      if (!Array.isArray(pagesData)) {
-        console.error('❌ بيانات الصفحات ليست مصفوفة:', pagesData);
+      if (!Array.isArray(pagesWithButtons)) {
+        console.error('❌ البيانات ليست مصفوفة:', pagesWithButtons);
         return;
       }
 
-      const pagesWithButtons = await Promise.all(
-        pagesData.map(async (page) => {
-          try {
-            const buttonsResponse = await axios.get(
-              `https://buttons-api-production.up.railway.app/api/buttons`,
-              { params: { page_id: page.id } }
-            );
-            const buttonsData = buttonsResponse.data?.data || buttonsResponse.data || [];
-            
-            // تحليل shape_details إذا كانت JSON string
-            const processedButtons = Array.isArray(buttonsData) ? buttonsData.map(btn => {
-              if (btn.shape_details && typeof btn.shape_details === 'string') {
-                try {
-                  btn.shape_details = JSON.parse(btn.shape_details);
-                } catch (e) {
-                  console.error('Error parsing shape_details:', e);
-                }
-              }
-              return btn;
-            }) : [];
-            
-            return {
-              ...page,
-              buttons: processedButtons.filter(btn => btn.page_id == page.id)
-            };
-          } catch (error) {
-            return {
-              ...page,
-              buttons: []
-            };
-          }
-        })
-      );
-      console.log('📊 الصفحات مع الأزرار:', pagesWithButtons);
-      setPages(pagesWithButtons);
+      // تحويل التسمية لتوافق الكود الموجود
+      const formattedPages = pagesWithButtons.map((page) => ({
+        ...page,
+        is_active: page.isActive !== undefined ? page.isActive : true,
+        buttons: (page.buttons || []).map((btn) => ({
+          ...btn,
+          page_id: btn.pageId || page.id,
+          is_active: btn.isActive !== undefined ? btn.isActive : true,
+          background_color: btn.backgroundColor || btn.background_color || '#3b82f6',
+          text_color: btn.textColor || btn.text_color || '#ffffff',
+          shape_details: btn.shapeDetails || btn.shape_details || null,
+          linked_buttons: btn.linkedButtons || btn.linked_buttons || null,
+          target_page: btn.targetPage || btn.target_page || null,
+          media_type: btn.mediaType || btn.media_type || null,
+          is_fixed: btn.isFixed || btn.is_fixed || false,
+        })),
+      }));
+
+      console.log('📊 الصفحات مع الأزرار:', formattedPages);
+      setPages(formattedPages);
       console.log('✅ تم تحديث البيانات بنجاح');
     } catch (error) {
       console.error('❌ خطأ في تحديث البيانات:', error);
+      toast.error('حدث خطأ أثناء تحديث البيانات');
     }
   };
 
-  // تحديث الزر في API
+  // تحديث الزر في Firestore
   const updateButtonInAPI = async (buttonId, updatedData) => {
     try {
-      const formData = new FormData();
+      // تحويل snake_case إلى camelCase لـ Firestore
+      const firestoreData = {};
       Object.entries(updatedData).forEach(([key, value]) => {
         if (value !== null && value !== undefined) {
-          if (typeof value === 'object') {
-            formData.append(key, JSON.stringify(value));
-          } else {
-            formData.append(key, value);
-          }
+          // تحويل التسمية
+          const camelKey = key.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+          firestoreData[camelKey] = value;
+          
+          // الاحتفاظ بالتسمية الأصلية أيضاً للتوافق
+          firestoreData[key] = value;
         }
       });
 
-      await axios.patch(
-        `https://buttons-api-production.up.railway.app/api/buttons/${buttonId}`,
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        }
-      );
-
+      await updateButtonInFirestore(buttonId, firestoreData);
       await refreshData();
       toast.success('تم تحديث الزر بنجاح');
     } catch (error) {
-      console.error('Error updating button:', error);
+      console.error('❌ خطأ في تحديث الزر:', error);
       toast.error('حدث خطأ أثناء تحديث الزر');
     }
   };
@@ -351,40 +322,41 @@ export default function Layout() {
       console.log('📦 بيانات الزر الجديد:', newButton);
 
       try {
-        console.log('📤 إرسال البيانات إلى API...');
-        const formData = new FormData();
-        Object.entries(newButton).forEach(([key, value]) => {
-          if (key === 'shape_details' && value) {
-            formData.append(key, JSON.stringify(value));
-            console.log('📋 shape_details JSON:', JSON.stringify(value));
-          } else {
-            formData.append(key, value);
-          }
-        });
+        console.log('📤 إرسال البيانات إلى Firestore...');
+        
+        // تحويل البيانات لـ Firestore (camelCase + snake_case)
+        const buttonData = {
+          name: newButton.name,
+          type: newButton.type,
+          width: newButton.width,
+          height: newButton.height,
+          isActive: newButton.is_active,
+          is_active: newButton.is_active,
+          pageId: currentPageId,
+          page_id: currentPageId,
+          clicks: newButton.clicks,
+          backgroundColor: newButton.background_color,
+          background_color: newButton.background_color,
+          textColor: newButton.text_color,
+          text_color: newButton.text_color,
+          shapeDetails: newButton.shape_details,
+          shape_details: newButton.shape_details,
+        };
 
-        console.log('🌐 إرسال طلب POST إلى API...');
-        const buttonResponse = await axios.post(
-          'https://buttons-api-production.up.railway.app/api/buttons',
-          formData,
-          {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            },
-          },
-        );
-        console.log('✅ استجابة API:', buttonResponse.data);
+        console.log('🌐 إضافة الزر إلى Firestore...');
+        const createdButton = await addButton(buttonData);
+        console.log('✅ تم إنشاء الزر:', createdButton);
 
         // إنشاء موقع للزر الجديد
         const buttonPosition = {
           x: 0,
           y: 0,
-          button: buttonResponse.data.data.id,
+          buttonId: createdButton.id,
+          button: createdButton.id,
         };
 
-        await axios.post(
-          'https://buttons-api-production.up.railway.app/api/button-positions',
-          buttonPosition,
-        );
+        await addButtonPosition(buttonPosition);
+        console.log('✅ تم إنشاء موقع الزر');
 
         console.log('🔄 تحديث البيانات...');
         await refreshData();
@@ -392,7 +364,6 @@ export default function Layout() {
         toast.success(`تم إضافة ${shapeConfig.name} بنجاح`);
       } catch (error) {
         console.error('❌ خطأ في إنشاء الزر:', error);
-        console.error('❌ تفاصيل الخطأ:', error.response?.data);
         toast.error('حدث خطأ أثناء إضافة الزر');
       }
     },
@@ -404,42 +375,37 @@ export default function Layout() {
       }
 
       try {
-        const formData = new FormData();
-        formData.append('name', `${selectedButton.name} (نسخة)`);
-        formData.append('type', selectedButton.type);
-        formData.append('page_id', currentPageId);
-        formData.append('height', selectedButton.height);
-        formData.append('width', selectedButton.width);
-        formData.append('is_active', selectedButton.is_active);
-        formData.append('background_color', selectedButton.background_color || '#3b82f6');
-        formData.append('text_color', selectedButton.text_color || '#000000');
+        const buttonData = {
+          name: `${selectedButton.name} (نسخة)`,
+          type: selectedButton.type,
+          pageId: currentPageId,
+          page_id: currentPageId,
+          height: selectedButton.height,
+          width: selectedButton.width,
+          isActive: selectedButton.is_active,
+          is_active: selectedButton.is_active,
+          backgroundColor: selectedButton.background_color || '#3b82f6',
+          background_color: selectedButton.background_color || '#3b82f6',
+          textColor: selectedButton.text_color || '#000000',
+          text_color: selectedButton.text_color || '#000000',
+        };
 
-        const buttonResponse = await axios.post(
-          'https://buttons-api-production.up.railway.app/api/buttons',
-          formData,
-          {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            },
-          }
-        );
+        const createdButton = await addButton(buttonData);
 
         const buttonPosition = {
           x: 0,
           y: 0,
-          button: buttonResponse.data.data.id,
+          buttonId: createdButton.id,
+          button: createdButton.id,
         };
 
-        await axios.post(
-          'https://buttons-api-production.up.railway.app/api/button-positions',
-          buttonPosition
-        );
+        await addButtonPosition(buttonPosition);
 
         await refreshData();
         setSelectedButton(null);
         toast.success('تم نسخ الزر بنجاح');
       } catch (error) {
-        console.error('Error duplicating button:', error);
+        console.error('❌ خطأ في نسخ الزر:', error);
         toast.error('حدث خطأ أثناء نسخ الزر');
       }
     },
@@ -456,22 +422,12 @@ export default function Layout() {
         )
       ) {
         try {
-          // حذف الزر
-          await axios.delete(`https://buttons-api-production.up.railway.app/api/buttons/${selectedButton.id}`);
+          // حذف الزر من Firestore
+          await deleteButtonFromFirestore(selectedButton.id);
+          console.log('✅ تم حذف الزر من Firestore');
           
-          // حذف موقع الزر من قاعدة البيانات
-          try {
-            // الحصول على جميع المواقع والبحث عن موقع هذا الزر
-            const positionsResponse = await axios.get('https://buttons-api-production.up.railway.app/api/button-positions/');
-            const buttonPosition = positionsResponse.data.find(pos => pos.button == selectedButton.id);
-            
-            if (buttonPosition && buttonPosition.id) {
-              await axios.delete(`https://buttons-api-production.up.railway.app/api/button-positions/${buttonPosition.id}/`);
-            }
-          } catch (posError) {
-            console.warn('Error deleting button position:', posError);
-            // لا نريد إيقاف العملية إذا فشل حذف الموقع
-          }
+          // ملاحظة: مواقع الأزرار في Firestore يمكن حذفها لاحقاً
+          // أو يمكن إضافة logic لحذفها تلقائياً
           
           // تنظيف localStorage من موقع الزر المحذوف
           const savedPositions = localStorage.getItem('buttonPositions');
@@ -485,7 +441,7 @@ export default function Layout() {
           setSelectedButton(null);
           toast.success('تم حذف الزر بنجاح');
         } catch (error) {
-          console.error('Error deleting button:', error);
+          console.error('❌ خطأ في حذف الزر:', error);
           toast.error('حدث خطأ أثناء حذف الزر');
         }
       }
@@ -502,22 +458,22 @@ export default function Layout() {
 
   const AddNewPage = async (pageName) => {
     try {
-      const newPage = {
+      const pageData = {
         name: pageName,
         title: pageName,
-        is_active: true
+        isActive: true,
+        is_active: true,
+        order: pages.length + 1,
       };
 
-      const response = await axios.post(
-        'https://buttons-api-production.up.railway.app/api/pages',
-        newPage
-      );
+      const createdPage = await addPage(pageData);
+      console.log('✅ تم إنشاء الصفحة:', createdPage);
 
       await refreshData();
-      setCurrentPageId(response.data.data.id);
+      setCurrentPageId(createdPage.id);
       toast.success('تم إضافة الصفحة بنجاح');
     } catch (error) {
-      console.error('Error creating page:', error);
+      console.error('❌ خطأ في إنشاء الصفحة:', error);
       toast.error('حدث خطأ أثناء إضافة الصفحة');
     }
   };
@@ -567,35 +523,42 @@ export default function Layout() {
     }
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
-    fileInput.accept = 'image/*,video/*';
+    fileInput.accept = 'image/*,video/*,audio/*';
     fileInput.onchange = async (e) => {
       const file = e.target.files[0];
       if (file) {
-        const formData = new FormData();
-        formData.append('file', file);
-
         try {
-          const uploadResponse = await axios.post(
-            'https://buttons-api-production.up.railway.app/api/upload',
-            formData,
-            {
-              headers: {
-                'Content-Type': 'multipart/form-data',
-              },
-            }
-          );
+          // عرض رسالة تحميل
+          const loadingToast = toast.loading('جاري رفع الملف...');
 
+          // رفع الوسائط إلى Firebase Storage
+          const uploadedFile = await uploadMedia(file, (progress) => {
+            // يمكن عرض نسبة التقدم هنا
+            console.log(`نسبة الرفع: ${Math.round(progress)}%`);
+          });
+
+          console.log('✅ تم رفع الوسائط:', uploadedFile);
+
+          // تحديث الزر في Firestore
           const updatedData = {
             type: 'media',
-            media: uploadResponse.data.file.url,
-            media_type: file.type.startsWith('image/') ? 'image' : 'video'
+            media: uploadedFile.url,
+            mediaType: uploadedFile.mediaType,
+            media_type: uploadedFile.mediaType,
+            fileName: uploadedFile.fileName,
+            file_name: uploadedFile.fileName,
+            filePath: uploadedFile.path,
+            file_path: uploadedFile.path,
           };
 
           await updateButtonInAPI(selectedButton.id, updatedData);
+          
+          // إخفاء رسالة التحميل وعرض رسالة النجاح
+          toast.dismiss(loadingToast);
           toast.success('تم إضافة الوسائط بنجاح');
         } catch (error) {
-          console.error('Error uploading media:', error);
-          toast.error('حدث خطأ أثناء رفع الوسائط');
+          console.error('❌ خطأ في رفع الوسائط:', error);
+          toast.error(error.message || 'حدث خطأ أثناء رفع الوسائط');
         }
       }
     };
@@ -613,48 +576,40 @@ export default function Layout() {
     fileInput.onchange = async (e) => {
       const file = e.target.files[0];
       if (file) {
-        const allowedExtensions = [
-          '.pdf', '.doc', '.docx', '.txt', '.xls', 
-          '.xlsx', '.ppt', '.pptx', '.zip', '.rar'
-        ];
-        const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
-
-        if (!allowedExtensions.includes(fileExtension)) {
-          toast.error('نوع الملف غير مسموح به');
-          return;
-        }
-
-        if (file.size > 10 * 1024 * 1024) {
-          toast.error('حجم الملف كبير جداً. الحد الأقصى هو 10 ميجابايت');
-          return;
-        }
-
-        const formData = new FormData();
-        formData.append('file', file);
-
         try {
-          const uploadResponse = await axios.post(
-            'https://buttons-api-production.up.railway.app/api/upload',
-            formData,
-            {
-              headers: {
-                'Content-Type': 'multipart/form-data',
-              },
-            }
-          );
+          // عرض رسالة تحميل
+          const loadingToast = toast.loading('جاري رفع الملف...');
 
+          // رفع المستند إلى Firebase Storage
+          const uploadedFile = await uploadDocument(file, (progress) => {
+            // يمكن عرض نسبة التقدم هنا
+            console.log(`نسبة الرفع: ${Math.round(progress)}%`);
+          });
+
+          console.log('✅ تم رفع المستند:', uploadedFile);
+
+          // تحديث الزر في Firestore
           const updatedData = {
             type: 'file',
-            file: uploadResponse.data.file.url,
-            file_name: file.name,
-            file_type: file.type
+            file: uploadedFile.url,
+            fileName: uploadedFile.fileName,
+            file_name: uploadedFile.fileName,
+            fileType: uploadedFile.fileType,
+            file_type: uploadedFile.fileType,
+            filePath: uploadedFile.path,
+            file_path: uploadedFile.path,
+            fileSize: uploadedFile.fileSize,
+            file_size: uploadedFile.fileSize,
           };
 
           await updateButtonInAPI(selectedButton.id, updatedData);
+          
+          // إخفاء رسالة التحميل وعرض رسالة النجاح
+          toast.dismiss(loadingToast);
           toast.success('تم إضافة الملف بنجاح');
         } catch (error) {
-          console.error('Error uploading file:', error);
-          toast.error('حدث خطأ أثناء رفع الملف');
+          console.error('❌ خطأ في رفع الملف:', error);
+          toast.error(error.message || 'حدث خطأ أثناء رفع الملف');
         }
       }
     };
