@@ -529,7 +529,7 @@ export default function ButtonArea({
   return (
     <main
       ref={containerRef}
-      className="relative overflow-visible mt-20 lg:mt-0 flex-1 p-6 rounded-md"
+      className="relative overflow-visible mt-24 sm:mt-20 lg:mt-0 flex-1 p-2 sm:p-4 md:p-6 rounded-md"
       style={{
         height: 'calc(70vh - 5rem)',
         overflowY: 'auto',
@@ -537,59 +537,66 @@ export default function ButtonArea({
         backgroundColor: backgroundColor,
       }}
     >
-      <button
-        onClick={() => navigate('/client')}
-        disabled={isTimerRunning}
-        className={`fixed top-4 left-4 lg:left-[19rem] z-50 text-white px-4 py-2 rounded-md shadow-lg ${
-          isTimerRunning
-            ? 'bg-gray-400 cursor-not-allowed'
-            : 'bg-blue-500 hover:bg-blue-600'
-        } ${clientButtonArea ? 'hidden' : ''}`}
-      >
-        عرض صفحة العميل
-      </button>
-      
-      <button
-        onClick={toggleControls}
-        disabled={isTimerRunning}
-        className={`fixed top-4 left-49 lg:left-[30rem] z-50 text-white px-4 py-2 rounded-md shadow-lg ${
-          isTimerRunning
-            ? 'bg-gray-400 cursor-not-allowed'
-            : 'bg-blue-500 hover:bg-blue-600'
-        } ${clientButtonArea ? 'hidden' : ''}`}
-      >
-        {showControls ? 'إخفاء التحكمات' : 'إظهار التحكمات'}
-      </button>
+      {/* أزرار التحكم - Responsive */}
+      <div className={`fixed top-2 sm:top-4 left-2 sm:left-4 lg:left-4 z-50 flex flex-wrap gap-1 sm:gap-2 ${clientButtonArea ? 'hidden' : ''}`}>
+        <button
+          onClick={() => navigate('/client')}
+          disabled={isTimerRunning}
+          className={`text-white px-2 py-1.5 sm:px-3 sm:py-2 md:px-4 md:py-2 text-xs sm:text-sm rounded-md shadow-lg ${
+            isTimerRunning
+              ? 'bg-gray-400 cursor-not-allowed'
+              : 'bg-blue-500 hover:bg-blue-600'
+          }`}
+        >
+          <span className="hidden sm:inline">عرض صفحة العميل</span>
+          <span className="sm:hidden">العميل</span>
+        </button>
+        
+        <button
+          onClick={toggleControls}
+          disabled={isTimerRunning}
+          className={`text-white px-2 py-1.5 sm:px-3 sm:py-2 md:px-4 md:py-2 text-xs sm:text-sm rounded-md shadow-lg ${
+            isTimerRunning
+              ? 'bg-gray-400 cursor-not-allowed'
+              : 'bg-blue-500 hover:bg-blue-600'
+          }`}
+        >
+          <span className="hidden sm:inline">{showControls ? 'إخفاء التحكمات' : 'إظهار التحكمات'}</span>
+          <span className="sm:hidden">{showControls ? 'إخفاء' : 'إظهار'}</span>
+        </button>
 
-      <button
-        onClick={() => navigate('/marketers-list')}
-        disabled={isTimerRunning}
-        className={`fixed top-4 left-[190px] lg:left-[41rem] z-50 text-white px-4 py-2 rounded-md shadow-lg ${
-          isTimerRunning
-            ? 'bg-gray-400 cursor-not-allowed'
-            : 'bg-green-500 hover:bg-green-800'
-        } ${clientButtonArea ? 'hidden' : ''}`}
-      >
-        قائمة المسوقين
-      </button>
+        <button
+          onClick={() => navigate('/marketers-list')}
+          disabled={isTimerRunning}
+          className={`text-white px-2 py-1.5 sm:px-3 sm:py-2 md:px-4 md:py-2 text-xs sm:text-sm rounded-md shadow-lg ${
+            isTimerRunning
+              ? 'bg-gray-400 cursor-not-allowed'
+              : 'bg-green-500 hover:bg-green-800'
+          }`}
+        >
+          <span className="hidden sm:inline">قائمة المسوقين</span>
+          <span className="sm:hidden">المسوقين</span>
+        </button>
 
-      <button
-        onClick={() => setShowColorPicker(true)}
-        disabled={isTimerRunning}
-        className={`fixed top-4 left-[310px] lg:left-[52rem] z-50 text-white px-4 py-2 rounded-md shadow-lg ${
-          isTimerRunning
-            ? 'bg-gray-400 cursor-not-allowed'
-            : 'bg-purple-500 hover:bg-purple-600'
-        } ${clientButtonArea ? 'hidden' : ''}`}
-        title="تغيير لون الخلفية"
-      >
-        🎨 لون الخلفية
-      </button>
+        <button
+          onClick={() => setShowColorPicker(true)}
+          disabled={isTimerRunning}
+          className={`text-white px-2 py-1.5 sm:px-3 sm:py-2 md:px-4 md:py-2 text-xs sm:text-sm rounded-md shadow-lg ${
+            isTimerRunning
+              ? 'bg-gray-400 cursor-not-allowed'
+              : 'bg-purple-500 hover:bg-purple-600'
+          }`}
+          title="تغيير لون الخلفية"
+        >
+          <span className="hidden md:inline">🎨 لون الخلفية</span>
+          <span className="md:hidden">🎨</span>
+        </button>
+      </div>
       
       {hasUnsavedChanges && showControls && (
         <button
           onClick={saveAllPositions}
-          className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md shadow-lg"
+          className="fixed bottom-2 sm:bottom-4 left-1/2 transform -translate-x-1/2 z-50 bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm md:text-base rounded-md shadow-lg"
         >
           حفظ المواقع
         </button>

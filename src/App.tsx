@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
 import './css/tailwind.css';  
-import './css/style.css';   
+import './css/style.css';
+import './css/responsive.css';   
 
 import Loader from './common/Loader';
 import ButtonDashboard from './pages/ButtonControl/ButtonDashboard' ;

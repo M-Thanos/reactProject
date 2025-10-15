@@ -22,8 +22,8 @@ const DefaultLayout: React.FC<{ children: ReactNode }> = ({ children }) => {
             sidebarOpen={sidebarOpen}
             setSidebarOpen={setSidebarOpen}
           />
-          <main>
-            <div className="mx-auto max-w-screen-2xl p-2 md:p-3 2xl:p-5 dark:bg-gray-900 bg-white">
+          <main className="flex-1">
+            <div className="mx-auto max-w-screen-2xl p-2 sm:p-3 md:p-4 lg:p-5 2xl:p-6 dark:bg-gray-900 bg-white h-full">
               {children}
             </div>
           </main>

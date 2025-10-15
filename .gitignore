@@ -27,3 +27,4 @@ src/config/firestore.js
 src/config/storage.js
 storage.rules
 firestore.rules
+.vercel

@@ -823,24 +823,26 @@ export default function Layout() {
       />
 
       {!showControls && (
-        <div className="fixed top-4 right-4 z-50 flex gap-2">
+        <div className="fixed top-2 sm:top-4 right-2 sm:right-4 z-50 flex flex-col sm:flex-row gap-1 sm:gap-2">
           <button
             onClick={() => toggleSidebarState('right')}
-            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md shadow-lg"
+            className="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm rounded-md shadow-lg whitespace-nowrap"
           >
-            {sidebarStates.right ? 'إخفاء القائمة اليمنى' : 'إظهار القائمة اليمنى'}
+            <span className="hidden sm:inline">{sidebarStates.right ? 'إخفاء القائمة اليمنى' : 'إظهار القائمة اليمنى'}</span>
+            <span className="sm:hidden">{sidebarStates.right ? 'إخفاء اليمنى' : 'إظهار اليمنى'}</span>
           </button>
           <button
             onClick={() => toggleSidebarState('left')}
-            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md shadow-lg"
+            className="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm rounded-md shadow-lg whitespace-nowrap"
           >
-            {sidebarStates.left ? 'إخفاء القائمة اليسرى' : 'إظهار القائمة اليسرى'}
+            <span className="hidden sm:inline">{sidebarStates.left ? 'إخفاء القائمة اليسرى' : 'إظهار القائمة اليسرى'}</span>
+            <span className="sm:hidden">{sidebarStates.left ? 'إخفاء اليسرى' : 'إظهار اليسرى'}</span>
           </button>
         </div>
       )}
 
-      <div className="flex gap-3 h-screen overflow-hidden bg-white dark:bg-gray-900">
-        <div className={`${!showControls && sidebarStates.left ? 'w-64 flex-shrink-0' : ''}`}>
+      <div className="flex flex-col lg:flex-row gap-0 lg:gap-3 h-screen overflow-hidden bg-white dark:bg-gray-900">
+        <div className={`${!showControls && sidebarStates.left ? 'w-full lg:w-64 flex-shrink-0' : ''}`}>
           <ButtonSidebar
             toggleButtonSidebar={toggleButtonSidebar}
             setShowButtonSidebar={setShowButtonSidebar}
@@ -856,7 +858,7 @@ export default function Layout() {
           />
         </div>
         
-        <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
+        <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden min-h-0">
           {showControls && (
             <ButtonNavbar
               handleButtonAction={handleButtonAction}
@@ -879,7 +881,7 @@ export default function Layout() {
             />
           )}
 
-          <div className="flex py-3">
+          <div className="flex py-1 sm:py-2 md:py-3 flex-1 overflow-hidden">
             {pages.length > 0 && currentPageId ? (
               <ButtonArea
                 pages={pages}
@@ -935,7 +937,7 @@ export default function Layout() {
           )}
         </div>
 
-        <div className={`${!showControls && sidebarStates.right ? 'w-64 flex-shrink-0' : ''}`}>
+        <div className={`${!showControls && sidebarStates.right ? 'w-full lg:w-64 flex-shrink-0' : ''}`}>
           <ButtonLeftSidebar
             toggleButtonLeftSidebar={toggleButtonLeftSidebar}
             setShowButtonLeftSidebar={setShowButtonLeftSidebar}
@@ -985,15 +987,15 @@ export default function Layout() {
       )}
 
       {showControls && showPagePopup && (
-        <div className="absolute inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[99999]">
-          <div className="bg-white p-5 rounded shadow-lg w-65">
-            <h2 className="text-lg font-bold mb-4">اختر الصفحة</h2>
-            <ul className="space-y-2">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[99999] p-2 sm:p-4">
+          <div className="bg-white dark:bg-gray-800 p-4 sm:p-5 rounded-lg shadow-lg w-full max-w-md mx-2 sm:mx-4">
+            <h2 className="text-base sm:text-lg font-bold mb-3 sm:mb-4 text-gray-800 dark:text-white">اختر الصفحة</h2>
+            <ul className="space-y-1.5 sm:space-y-2 max-h-[60vh] overflow-y-auto">
               {pages.map((page) => (
                 <li key={page.id}>
                   <button
                     onClick={() => handleFooterAction(page.id)}
-                    className="block w-full p-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                    className="block w-full p-2 sm:p-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm sm:text-base"
                   >
                     {page.name}
                   </button>
@@ -1002,7 +1004,7 @@ export default function Layout() {
             </ul>
             <button
               onClick={() => setShowPagePopup(false)}
-              className="mt-4 bg-red-500 text-white px-4 py-2 rounded"
+              className="mt-3 sm:mt-4 w-full bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors text-sm sm:text-base"
             >
               إغلاق
             </button>

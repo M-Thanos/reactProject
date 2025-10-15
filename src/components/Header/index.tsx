@@ -12,8 +12,8 @@ const Header = (props: {
 }) => {
   return (
     <header className="sticky top-0 z-20 flex w-full bg-white drop-shadow-1 dark:bg-boxdark dark:drop-shadow-none">
-      <div className="flex flex-grow items-center justify-between px-4 py-4 shadow-2 md:px-6 2xl:px-11">
-        <div className="flex items-center gap-2 sm:gap-4 lg:hidden">
+      <div className="flex flex-grow items-center justify-between px-2 py-2 sm:px-4 sm:py-3 md:px-6 md:py-4 2xl:px-11 shadow-2">
+        <div className="flex items-center gap-1 sm:gap-2 md:gap-4 lg:hidden">
           {/* <!-- Hamburger Toggle BTN --> */}
           <button
             aria-controls="sidebar"
@@ -92,8 +92,8 @@ const Header = (props: {
           </form>
         </div>
 
-        <div className="flex items-center gap-3 2xsm:gap-7">
-          <ul className="flex items-center gap-2 2xsm:gap-4">
+        <div className="flex items-center gap-1 sm:gap-2 md:gap-3 2xsm:gap-4 lg:gap-7">
+          <ul className="flex items-center gap-1 sm:gap-2 md:gap-3 2xsm:gap-4">
             {/* <!-- Dark Mode Toggler --> */}
             <DarkModeSwitcher />
             {/* <!-- Dark Mode Toggler --> */}

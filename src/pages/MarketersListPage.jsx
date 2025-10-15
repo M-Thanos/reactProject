@@ -247,26 +247,26 @@ const MarketersListPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 p-6">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 p-2 sm:p-4 md:p-6">
       {/* الهيدر */}
       <div className="max-w-7xl mx-auto">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-6">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-3 sm:p-4 md:p-6 mb-4 md:mb-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
+            <div className="flex items-center gap-2 sm:gap-3 md:gap-4 w-full sm:w-auto">
               <button
                 onClick={() => navigate('/')}
-                className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+                className="bg-gray-500 hover:bg-gray-600 text-white px-3 py-2 sm:px-4 sm:py-2 text-sm sm:text-base rounded-lg flex items-center gap-2 transition-colors"
               >
                 <FaArrowLeft />
-                <span>العودة</span>
+                <span className="hidden sm:inline">العودة</span>
               </button>
-              <h1 className="text-3xl font-bold text-gray-800 dark:text-white">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 dark:text-white">
                 قائمة المسوقين
               </h1>
             </div>
             <button
               onClick={() => handleOpenModal()}
-              className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg flex items-center gap-2 font-semibold transition-colors"
+              className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 sm:px-6 sm:py-3 text-sm sm:text-base rounded-lg flex items-center gap-2 font-semibold transition-colors w-full sm:w-auto justify-center"
             >
               <FaPlus />
               <span>إضافة مسوق جديد</span>
@@ -292,21 +292,21 @@ const MarketersListPage = () => {
         ) : (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full min-w-max">
                 <thead className="bg-blue-500 text-white">
                   <tr>
-                    <th className="px-6 py-4 text-right text-sm font-semibold">#</th>
-                    <th className="px-6 py-4 text-right text-sm font-semibold">الاسم</th>
-                    <th className="px-6 py-4 text-right text-sm font-semibold">البريد الإلكتروني</th>
-                    <th className="px-6 py-4 text-right text-sm font-semibold">الهاتف</th>
-                    <th className="px-6 py-4 text-right text-sm font-semibold">كود الخصم</th>
-                    <th className="px-6 py-4 text-right text-sm font-semibold">قيمة الخصم</th>
-                    <th className="px-6 py-4 text-right text-sm font-semibold">نوع العملية</th>
-                    <th className="px-6 py-4 text-right text-sm font-semibold">تاريخ البدء</th>
-                    <th className="px-6 py-4 text-right text-sm font-semibold">تاريخ الانتهاء</th>
-                    <th className="px-6 py-4 text-right text-sm font-semibold">حالة الكود</th>
-                    <th className="px-6 py-4 text-right text-sm font-semibold">الحالة</th>
-                    <th className="px-6 py-4 text-right text-sm font-semibold">الإجراءات</th>
+                    <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-right text-xs sm:text-sm font-semibold">#</th>
+                    <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-right text-xs sm:text-sm font-semibold whitespace-nowrap">الاسم</th>
+                    <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-right text-xs sm:text-sm font-semibold whitespace-nowrap hidden md:table-cell">البريد الإلكتروني</th>
+                    <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-right text-xs sm:text-sm font-semibold whitespace-nowrap hidden lg:table-cell">الهاتف</th>
+                    <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-right text-xs sm:text-sm font-semibold whitespace-nowrap">كود الخصم</th>
+                    <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-right text-xs sm:text-sm font-semibold whitespace-nowrap">قيمة الخصم</th>
+                    <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-right text-xs sm:text-sm font-semibold whitespace-nowrap hidden lg:table-cell">نوع العملية</th>
+                    <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-right text-xs sm:text-sm font-semibold whitespace-nowrap hidden xl:table-cell">تاريخ البدء</th>
+                    <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-right text-xs sm:text-sm font-semibold whitespace-nowrap hidden xl:table-cell">تاريخ الانتهاء</th>
+                    <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-right text-xs sm:text-sm font-semibold whitespace-nowrap hidden md:table-cell">حالة الكود</th>
+                    <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-right text-xs sm:text-sm font-semibold whitespace-nowrap">الحالة</th>
+                    <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-right text-xs sm:text-sm font-semibold whitespace-nowrap">الإجراءات</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -317,38 +317,38 @@ const MarketersListPage = () => {
                         !marketer.is_active ? 'opacity-60' : ''
                       }`}
                     >
-                      <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                      <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-xs sm:text-sm text-gray-700 dark:text-gray-300">
                         {index + 1}
                       </td>
-                      <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
-                        <div className="flex items-center gap-2">
-                          <FaUser className="text-blue-500" />
-                          {marketer.name}
+                      <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-xs sm:text-sm font-medium text-gray-900 dark:text-white">
+                        <div className="flex items-center gap-1 sm:gap-2">
+                          <FaUser className="text-blue-500 text-xs sm:text-sm" />
+                          <span className="truncate max-w-[100px] sm:max-w-none">{marketer.name}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-                        <div className="flex items-center gap-2">
-                          <FaEnvelope className="text-gray-500" />
-                          {marketer.email}
+                      <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-xs sm:text-sm text-gray-700 dark:text-gray-300 hidden md:table-cell">
+                        <div className="flex items-center gap-1 sm:gap-2">
+                          <FaEnvelope className="text-gray-500 text-xs sm:text-sm" />
+                          <span className="truncate max-w-[150px]">{marketer.email}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-                        <div className="flex items-center gap-2">
-                          <FaPhone className="text-gray-500" />
+                      <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-xs sm:text-sm text-gray-700 dark:text-gray-300 hidden lg:table-cell">
+                        <div className="flex items-center gap-1 sm:gap-2">
+                          <FaPhone className="text-gray-500 text-xs sm:text-sm" />
                           {marketer.phone}
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-sm">
-                        <span className="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 px-3 py-1 rounded-full font-semibold">
+                      <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-xs sm:text-sm">
+                        <span className="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full font-semibold text-xs">
                           {marketer.discount_code}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                      <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-xs sm:text-sm text-gray-700 dark:text-gray-300">
                         <span className="font-bold text-green-600 dark:text-green-400">
                           {marketer.discount_value}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                      <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-xs sm:text-sm text-gray-700 dark:text-gray-300 hidden lg:table-cell">
                         <div className="flex flex-col gap-1">
                           <span className={`px-3 py-1 rounded-full font-semibold text-center ${
                             marketer.operation_type === '%' 
@@ -367,69 +367,69 @@ const MarketersListPage = () => {
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                      <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-xs sm:text-sm text-gray-700 dark:text-gray-300 hidden xl:table-cell">
                         {(marketer.start_date || marketer.startDate) ? (
-                          <div className="flex items-center gap-2">
-                            <FaCalendarAlt className="text-blue-500" />
-                            <span>{new Date(marketer.start_date || marketer.startDate).toLocaleDateString('ar-SA')}</span>
+                          <div className="flex items-center gap-1 sm:gap-2">
+                            <FaCalendarAlt className="text-blue-500 text-xs sm:text-sm" />
+                            <span className="text-xs">{new Date(marketer.start_date || marketer.startDate).toLocaleDateString('ar-SA')}</span>
                           </div>
                         ) : (
-                          <span className="text-gray-400">غير محدد</span>
+                          <span className="text-gray-400 text-xs">غير محدد</span>
                         )}
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                      <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-xs sm:text-sm text-gray-700 dark:text-gray-300 hidden xl:table-cell">
                         {(marketer.end_date || marketer.endDate) ? (
-                          <div className="flex items-center gap-2">
-                            <FaClock className="text-red-500" />
-                            <span>{new Date(marketer.end_date || marketer.endDate).toLocaleDateString('ar-SA')}</span>
+                          <div className="flex items-center gap-1 sm:gap-2">
+                            <FaClock className="text-red-500 text-xs sm:text-sm" />
+                            <span className="text-xs">{new Date(marketer.end_date || marketer.endDate).toLocaleDateString('ar-SA')}</span>
                           </div>
                         ) : (
-                          <span className="text-gray-400">غير محدد</span>
+                          <span className="text-gray-400 text-xs">غير محدد</span>
                         )}
                       </td>
-                      <td className="px-6 py-4 text-sm">
+                      <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-xs sm:text-sm hidden md:table-cell">
                         {(() => {
                           const codeStatus = getCodeStatus(marketer);
                           return (
-                            <span className={`px-3 py-1 rounded-full font-semibold ${codeStatus.color}`}>
+                            <span className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-full font-semibold text-xs ${codeStatus.color}`}>
                               {codeStatus.text}
                             </span>
                           );
                         })()}
                       </td>
-                      <td className="px-6 py-4 text-sm">
+                      <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-xs sm:text-sm">
                         <button
                           onClick={() => handleToggleActive(marketer)}
-                          className="flex items-center gap-2"
+                          className="flex items-center gap-1 sm:gap-2"
                         >
                           {marketer.is_active ? (
-                            <span className="flex items-center gap-2 text-green-600 dark:text-green-400">
-                              <FaToggleOn className="text-2xl" />
-                              <span className="font-semibold">مفعل</span>
+                            <span className="flex items-center gap-1 sm:gap-2 text-green-600 dark:text-green-400">
+                              <FaToggleOn className="text-lg sm:text-2xl" />
+                              <span className="font-semibold text-xs sm:text-sm hidden sm:inline">مفعل</span>
                             </span>
                           ) : (
-                            <span className="flex items-center gap-2 text-red-600 dark:text-red-400">
-                              <FaToggleOff className="text-2xl" />
-                              <span className="font-semibold">معطل</span>
+                            <span className="flex items-center gap-1 sm:gap-2 text-red-600 dark:text-red-400">
+                              <FaToggleOff className="text-lg sm:text-2xl" />
+                              <span className="font-semibold text-xs sm:text-sm hidden sm:inline">معطل</span>
                             </span>
                           )}
                         </button>
                       </td>
-                      <td className="px-6 py-4 text-sm">
-                        <div className="flex items-center gap-2">
+                      <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-xs sm:text-sm">
+                        <div className="flex items-center gap-1 sm:gap-2">
                           <button
                             onClick={() => handleOpenModal(marketer)}
-                            className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg transition-colors"
+                            className="bg-blue-500 hover:bg-blue-600 text-white p-1.5 sm:px-3 sm:py-2 rounded-lg transition-colors"
                             title="تعديل"
                           >
-                            <FaEdit />
+                            <FaEdit className="text-xs sm:text-sm" />
                           </button>
                           <button
                             onClick={() => handleDeleteMarketer(marketer.id)}
-                            className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg transition-colors"
+                            className="bg-red-500 hover:bg-red-600 text-white p-1.5 sm:px-3 sm:py-2 rounded-lg transition-colors"
                             title="حذف"
                           >
-                            <FaTrash />
+                            <FaTrash className="text-xs sm:text-sm" />
                           </button>
                         </div>
                       </td>
@@ -444,21 +444,21 @@ const MarketersListPage = () => {
 
       {/* نموذج إضافة/تعديل */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-6 flex justify-between items-center rounded-t-lg">
-              <h2 className="text-2xl font-bold">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto mx-2 sm:mx-4">
+            <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-3 sm:p-4 md:p-6 flex justify-between items-center rounded-t-lg">
+              <h2 className="text-lg sm:text-xl md:text-2xl font-bold">
                 {editingMarketer ? 'تعديل بيانات المسوق' : 'إضافة مسوق جديد'}
               </h2>
               <button
                 onClick={handleCloseModal}
                 className="text-white hover:text-gray-200 transition-colors"
               >
-                <FaTimes className="text-2xl" />
+                <FaTimes className="text-xl sm:text-2xl" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveMarketer} className="p-6 space-y-6">
+            <form onSubmit={handleSaveMarketer} className="p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4 md:space-y-6">
               {/* الاسم */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
@@ -561,7 +561,7 @@ const MarketersListPage = () => {
                   <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
                     ⚙️ العملية الحسابية
                   </label>
-                  <div className="grid grid-cols-4 gap-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
                     <button
                       type="button"
                       onClick={() => setFormData({ ...formData, calculation_type: '+' })}
@@ -617,7 +617,7 @@ const MarketersListPage = () => {
                   فترة صلاحية الكود
                 </h3>
                 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   {/* تاريخ البدء */}
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">

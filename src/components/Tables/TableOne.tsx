@@ -50,35 +50,35 @@ const brandData: BRAND[] = [
 
 const TableOne = () => {
   return (
-    <div className="rounded-sm border border-stroke bg-white px-5 pt-6 pb-2.5 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
-      <h4 className="mb-6 text-xl font-semibold text-black dark:text-white">
+    <div className="rounded-sm border border-stroke bg-white px-3 pt-4 pb-2 sm:px-5 sm:pt-6 sm:pb-2.5 shadow-default dark:border-strokedark dark:bg-boxdark md:px-7.5 xl:pb-1">
+      <h4 className="mb-4 sm:mb-6 text-lg sm:text-xl font-semibold text-black dark:text-white">
         Top Channels
       </h4>
 
       <div className="flex flex-col">
         <div className="grid grid-cols-3 rounded-sm bg-gray-2 dark:bg-meta-4 sm:grid-cols-5">
-          <div className="p-2.5 xl:p-5">
-            <h5 className="text-sm font-medium uppercase xsm:text-base">
+          <div className="p-2 sm:p-2.5 xl:p-5">
+            <h5 className="text-xs sm:text-sm font-medium uppercase xsm:text-base">
               Source
             </h5>
           </div>
-          <div className="p-2.5 text-center xl:p-5">
-            <h5 className="text-sm font-medium uppercase xsm:text-base">
+          <div className="p-2 sm:p-2.5 text-center xl:p-5">
+            <h5 className="text-xs sm:text-sm font-medium uppercase xsm:text-base">
               Visitors
             </h5>
           </div>
-          <div className="p-2.5 text-center xl:p-5">
-            <h5 className="text-sm font-medium uppercase xsm:text-base">
+          <div className="p-2 sm:p-2.5 text-center xl:p-5">
+            <h5 className="text-xs sm:text-sm font-medium uppercase xsm:text-base">
               Revenues
             </h5>
           </div>
-          <div className="hidden p-2.5 text-center sm:block xl:p-5">
-            <h5 className="text-sm font-medium uppercase xsm:text-base">
+          <div className="hidden p-2 sm:p-2.5 text-center sm:block xl:p-5">
+            <h5 className="text-xs sm:text-sm font-medium uppercase xsm:text-base">
               Sales
             </h5>
           </div>
-          <div className="hidden p-2.5 text-center sm:block xl:p-5">
-            <h5 className="text-sm font-medium uppercase xsm:text-base">
+          <div className="hidden p-2 sm:p-2.5 text-center sm:block xl:p-5">
+            <h5 className="text-xs sm:text-sm font-medium uppercase xsm:text-base">
               Conversion
             </h5>
           </div>
@@ -93,29 +93,29 @@ const TableOne = () => {
             }`}
             key={key}
           >
-            <div className="flex items-center gap-3 p-2.5 xl:p-5">
-              <div className="flex-shrink-0">
-                <img src={brand.logo} alt="Brand" />
+            <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-2.5 xl:p-5">
+              <div className="flex-shrink-0 w-6 h-6 sm:w-8 sm:h-8">
+                <img src={brand.logo} alt="Brand" className="w-full h-full object-contain" />
               </div>
-              <p className="hidden text-black dark:text-white sm:block">
+              <p className="hidden text-black dark:text-white sm:block text-xs sm:text-sm">
                 {brand.name}
               </p>
             </div>
 
-            <div className="flex items-center justify-center p-2.5 xl:p-5">
-              <p className="text-black dark:text-white">{brand.visitors}K</p>
+            <div className="flex items-center justify-center p-2 sm:p-2.5 xl:p-5">
+              <p className="text-black dark:text-white text-xs sm:text-sm">{brand.visitors}K</p>
             </div>
 
-            <div className="flex items-center justify-center p-2.5 xl:p-5">
-              <p className="text-meta-3">${brand.revenues}</p>
+            <div className="flex items-center justify-center p-2 sm:p-2.5 xl:p-5">
+              <p className="text-meta-3 text-xs sm:text-sm">${brand.revenues}</p>
             </div>
 
-            <div className="hidden items-center justify-center p-2.5 sm:flex xl:p-5">
-              <p className="text-black dark:text-white">{brand.sales}</p>
+            <div className="hidden items-center justify-center p-2 sm:p-2.5 sm:flex xl:p-5">
+              <p className="text-black dark:text-white text-xs sm:text-sm">{brand.sales}</p>
             </div>
 
-            <div className="hidden items-center justify-center p-2.5 sm:flex xl:p-5">
-              <p className="text-meta-5">{brand.conversion}%</p>
+            <div className="hidden items-center justify-center p-2 sm:p-2.5 sm:flex xl:p-5">
+              <p className="text-meta-5 text-xs sm:text-sm">{brand.conversion}%</p>
             </div>
           </div>
         ))}

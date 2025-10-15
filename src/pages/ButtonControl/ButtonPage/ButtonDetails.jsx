@@ -180,7 +180,7 @@ const ButtonDetails = ({ button, selectedButton, hoveredButton, pages }) => {
   return ReactDOM.createPortal(
     <>
       <div
-        className="fixed z-[9999]"
+        className="fixed z-[9997]"
         style={{
           top: `${rect.top - 10}px`,
           left: `${rect.left + rect.width / 2}px`,
