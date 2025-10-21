@@ -20,6 +20,7 @@ import {
 } from 'react-icons/fa';
 import ButtonDetails from './ButtonDetails';
 import { toast } from 'react-toastify';
+import Button from '../../../components/Button';
 // استبدال axios بـ Firestore
 import {
   getAllButtonPositions,
@@ -539,67 +540,61 @@ export default function ButtonArea({
     >
       {/* أزرار التحكم - Responsive */}
       <div className={`fixed top-2 sm:top-4 left-2 sm:left-4 lg:left-4 z-50 flex flex-wrap gap-1 sm:gap-2 ${clientButtonArea ? 'hidden' : ''}`}>
-        <button
+        <Button
           onClick={() => navigate('/client')}
           disabled={isTimerRunning}
-          className={`text-white px-2 py-1.5 sm:px-3 sm:py-2 md:px-4 md:py-2 text-xs sm:text-sm rounded-md shadow-lg ${
-            isTimerRunning
-              ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-blue-500 hover:bg-blue-600'
-          }`}
+          variant="primary"
+          size="sm"
+          className="text-xs sm:text-sm"
         >
           <span className="hidden sm:inline">عرض صفحة العميل</span>
           <span className="sm:hidden">العميل</span>
-        </button>
+        </Button>
         
-        <button
+        <Button
           onClick={toggleControls}
           disabled={isTimerRunning}
-          className={`text-white px-2 py-1.5 sm:px-3 sm:py-2 md:px-4 md:py-2 text-xs sm:text-sm rounded-md shadow-lg ${
-            isTimerRunning
-              ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-blue-500 hover:bg-blue-600'
-          }`}
+          variant="primary"
+          size="sm"
+          className="text-xs sm:text-sm"
         >
           <span className="hidden sm:inline">{showControls ? 'إخفاء التحكمات' : 'إظهار التحكمات'}</span>
           <span className="sm:hidden">{showControls ? 'إخفاء' : 'إظهار'}</span>
-        </button>
+        </Button>
 
-        <button
+        <Button
           onClick={() => navigate('/marketers-list')}
           disabled={isTimerRunning}
-          className={`text-white px-2 py-1.5 sm:px-3 sm:py-2 md:px-4 md:py-2 text-xs sm:text-sm rounded-md shadow-lg ${
-            isTimerRunning
-              ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-green-500 hover:bg-green-800'
-          }`}
+          variant="success"
+          size="sm"
+          className="text-xs sm:text-sm"
         >
           <span className="hidden sm:inline">قائمة المسوقين</span>
           <span className="sm:hidden">المسوقين</span>
-        </button>
+        </Button>
 
-        <button
+        <Button
           onClick={() => setShowColorPicker(true)}
           disabled={isTimerRunning}
-          className={`text-white px-2 py-1.5 sm:px-3 sm:py-2 md:px-4 md:py-2 text-xs sm:text-sm rounded-md shadow-lg ${
-            isTimerRunning
-              ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-purple-500 hover:bg-purple-600'
-          }`}
+          variant="secondary"
+          size="sm"
+          className="text-xs sm:text-sm"
           title="تغيير لون الخلفية"
         >
           <span className="hidden md:inline">🎨 لون الخلفية</span>
           <span className="md:hidden">🎨</span>
-        </button>
+        </Button>
       </div>
       
       {hasUnsavedChanges && showControls && (
-        <button
+        <Button
           onClick={saveAllPositions}
-          className="fixed bottom-2 sm:bottom-4 left-1/2 transform -translate-x-1/2 z-50 bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm md:text-base rounded-md shadow-lg"
+          variant="success"
+          size="sm"
+          className="fixed bottom-2 sm:bottom-4 left-1/2 transform -translate-x-1/2 z-50 text-xs sm:text-sm md:text-base"
         >
           حفظ المواقع
-        </button>
+        </Button>
       )}
 
       <div className="relative h-full overflow-y-visible">
@@ -826,12 +821,14 @@ export default function ButtonArea({
               </div>
 
               {/* Close Button */}
-              <button
+              <Button
                 onClick={() => setShowColorPicker(false)}
-                className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg font-semibold transition-colors"
+                variant="primary"
+                fullWidth
+                className="py-2 px-4 font-semibold"
               >
                 تم
-              </button>
+              </Button>
             </div>
           </div>
         </div>

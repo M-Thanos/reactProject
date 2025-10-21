@@ -13,6 +13,8 @@ import ButtonArea from './pages/ButtonControl/ButtonPage/ButtonArea';
 import ClientButtonArea from './pages/ButtonControl/ClientPage/ClientButtonArea';
 // @ts-ignore
 import MarketersListPage from './pages/MarketersListPage';
+// @ts-ignore
+import ClientViewPage from './pages/ClientViewPage';
 import Login from './pages/Auth/Login';
 import UserManagement from './pages/Auth/UserManagement';
 import InitialSetup from './pages/Setup/InitialSetup';
@@ -50,6 +52,9 @@ function App() {
           currentUser ? <Navigate to="/" replace /> : <Login />
         } 
       />
+      
+      {/* Client View Route - Public - للعملاء فقط */}
+      <Route path="/view/:linkId" element={<ClientViewPage />} />
       
       {/* Setup Route - للإعداد الأولي فقط */}
       {/* احذف هذا الـroute بعد إنشاء المستخدمين! */}

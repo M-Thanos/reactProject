@@ -155,6 +155,10 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     root.style.setProperty('--btn-gradient-text', colors.gradient.text);
 
     console.log('🎨 Colors applied:', colors);
+    console.log('🎨 CSS Variables set:', {
+      '--btn-primary-bg': root.style.getPropertyValue('--btn-primary-bg'),
+      '--btn-primary-text': root.style.getPropertyValue('--btn-primary-text'),
+    });
   };
 
   // تحديث الألوان في Firestore
@@ -247,8 +251,10 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // تطبيق الألوان عند تغييرها
   useEffect(() => {
-    applyColors();
-  }, [buttonColors]);
+    if (!loading) {
+      applyColors();
+    }
+  }, [buttonColors, loading]);
 
   const value: ThemeContextType = {
     buttonColors,

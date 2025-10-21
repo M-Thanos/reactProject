@@ -65,6 +65,17 @@ export default function SortableItem({ id, button, onClick, selectedButton, show
       minHeight: '40px'
     };
 
+    // إضافة console.log للتأكد من الألوان (فقط عند التغيير)
+    if (button.id && (button.background_color || button.color)) {
+      console.log(`🎨 Button ${button.id} colors:`, {
+        background_color: button.background_color,
+        color: button.color,
+        text_color: button.text_color,
+        finalBackground: defaultStyles.backgroundColor,
+        finalColor: defaultStyles.color
+      });
+    }
+
     // تطبيق أنماط الشكل المخصص إذا كانت موجودة
     if (button.shape_details && button.type === 'shape') {
       const shapeStyle = button.shape_details.style || {};

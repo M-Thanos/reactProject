@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import Flatpickr from 'react-flatpickr';
 import 'flatpickr/dist/themes/material_blue.css';
-import { 
+import {
   FaPlus, 
   FaEdit, 
   FaTrash, 
@@ -18,6 +18,8 @@ import {
   FaTimes,
   FaCalendarAlt,
   FaClock,
+  FaLink,
+  FaCopy,
 } from 'react-icons/fa';
 import {
   getAllMarketers,
@@ -25,6 +27,7 @@ import {
   updateMarketer,
   deleteMarketer,
   validateDiscountCode,
+  generateLinkForMarketer,
 } from '../config/firestore';
 
 const MarketersListPage = () => {
@@ -246,6 +249,41 @@ const MarketersListPage = () => {
     return { status: 'active', text: 'نشط', color: 'bg-green-100 text-green-800' };
   };
 
+  // توليد رابط للمسوق
+  const handleGenerateLink = async (marketer) => {
+    try {
+      let linkId = marketer.linkId;
+      
+      // إذا لم يكن لديه رابط، نولد واحد جديد
+      if (!linkId) {
+        toast.loading('جاري توليد الرابط...', { id: 'generating-link' });
+        linkId = await generateLinkForMarketer(marketer.id);
+        toast.success('تم توليد الرابط بنجاح!', { id: 'generating-link' });
+        fetchMarketers(); // تحديث القائمة
+      }
+      
+      // نسخ الرابط
+      const fullLink = `${window.location.origin}/view/${linkId}`;
+      await navigator.clipboard.writeText(fullLink);
+      toast.success('تم نسخ الرابط! 🎉');
+    } catch (error) {
+      console.error('❌ خطأ في توليد الرابط:', error);
+      toast.error('حدث خطأ في توليد الرابط');
+    }
+  };
+
+  // نسخ الرابط الموجود
+  const handleCopyLink = async (linkId) => {
+    try {
+      const fullLink = `${window.location.origin}/view/${linkId}`;
+      await navigator.clipboard.writeText(fullLink);
+      toast.success('تم نسخ الرابط! 📋');
+    } catch (error) {
+      console.error('❌ خطأ في نسخ الرابط:', error);
+      toast.error('حدث خطأ في نسخ الرابط');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 p-2 sm:p-4 md:p-6">
       {/* الهيدر */}
@@ -306,6 +344,7 @@ const MarketersListPage = () => {
                     <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-right text-xs sm:text-sm font-semibold whitespace-nowrap hidden xl:table-cell">تاريخ الانتهاء</th>
                     <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-right text-xs sm:text-sm font-semibold whitespace-nowrap hidden md:table-cell">حالة الكود</th>
                     <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-right text-xs sm:text-sm font-semibold whitespace-nowrap">الحالة</th>
+                    <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-right text-xs sm:text-sm font-semibold whitespace-nowrap">الرابط</th>
                     <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-right text-xs sm:text-sm font-semibold whitespace-nowrap">الإجراءات</th>
                   </tr>
                 </thead>
@@ -414,6 +453,27 @@ const MarketersListPage = () => {
                             </span>
                           )}
                         </button>
+                      </td>
+                      <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-xs sm:text-sm">
+                        {marketer.linkId ? (
+                          <button
+                            onClick={() => handleCopyLink(marketer.linkId)}
+                            className="bg-green-500 hover:bg-green-600 text-white p-1.5 sm:px-3 sm:py-2 rounded-lg transition-colors flex items-center gap-1 sm:gap-2"
+                            title="نسخ الرابط"
+                          >
+                            <FaCopy className="text-xs sm:text-sm" />
+                            <span className="hidden sm:inline text-xs">نسخ</span>
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleGenerateLink(marketer)}
+                            className="bg-purple-500 hover:bg-purple-600 text-white p-1.5 sm:px-3 sm:py-2 rounded-lg transition-colors flex items-center gap-1 sm:gap-2"
+                            title="توليد رابط"
+                          >
+                            <FaLink className="text-xs sm:text-sm" />
+                            <span className="hidden sm:inline text-xs">توليد</span>
+                          </button>
+                        )}
                       </td>
                       <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-xs sm:text-sm">
                         <div className="flex items-center gap-1 sm:gap-2">

@@ -27,6 +27,7 @@ export default function ColorForm({
   const handleCancel = () => {
     updateButton(selectedButton?.id, {
       color: originalBackgroundColor,
+      background_color: originalBackgroundColor, // إضافة background_color للتأكد
       text_color: originalTextColor,
     });
     onClose();
@@ -34,16 +35,25 @@ export default function ColorForm({
 
   const handleConfirm = async () => {
     try {
+      console.log('🎨 Updating button colors:', {
+        buttonId: selectedButton?.id,
+        background_color: tempBackgroundColor,
+        text_color: tempTextColor
+      });
+      
       await updateButton(selectedButton?.id, {
         color: tempBackgroundColor,
+        background_color: tempBackgroundColor, // إضافة background_color للتأكد
         text_color: tempTextColor,
       });
+      
+      console.log('✅ Button colors updated successfully');
       toast.success('تم تحديث ألوان الزر بنجاح');
       onClose();
       setSelectedButton(null);
     } catch (error) {
+      console.error('❌ Error updating button colors:', error);
       toast.error('حدث خطأ أثناء تحديث ألوان الزر');
-      console.error('Error updating button colors:', error);
     }
   };
 
@@ -104,10 +114,19 @@ export default function ColorForm({
               style={{
                 backgroundColor: tempBackgroundColor,
                 color: tempTextColor,
+                minHeight: '60px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '16px',
+                fontWeight: '500'
               }}
             >
-              نص تجريبي
+              {selectedButton?.name || 'نص تجريبي'}
             </div>
+            <p className="text-xs text-gray-500 mt-2 text-center">
+              لون الخلفية: {tempBackgroundColor} | لون النص: {tempTextColor}
+            </p>
           </div>
 
           <div className="flex justify-between mt-4">
