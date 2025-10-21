@@ -1,0 +1,84 @@
+/* Button Group Styles */
+.button-group {
+  display: inline-flex;
+  position: relative;
+  isolation: isolate;
+}
+
+.button-group-horizontal {
+  flex-direction: row;
+}
+
+.button-group-vertical {
+  flex-direction: column;
+}
+
+.button-group-full-width {
+  width: 100%;
+}
+
+.button-group-full-width > * {
+  flex: 1;
+}
+
+/* Horizontal Group Styling */
+.button-group-horizontal > *:not(:first-child) {
+  margin-right: -1px;
+}
+
+.button-group-horizontal > *:first-child {
+  border-top-left-radius: 0.5rem;
+  border-bottom-left-radius: 0.5rem;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.button-group-horizontal > *:last-child {
+  border-top-right-radius: 0.5rem;
+  border-bottom-right-radius: 0.5rem;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.button-group-horizontal > *:not(:first-child):not(:last-child) {
+  border-radius: 0;
+}
+
+/* Vertical Group Styling */
+.button-group-vertical > *:not(:first-child) {
+  margin-top: -1px;
+}
+
+.button-group-vertical > *:first-child {
+  border-top-left-radius: 0.5rem;
+  border-top-right-radius: 0.5rem;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.button-group-vertical > *:last-child {
+  border-bottom-left-radius: 0.5rem;
+  border-bottom-right-radius: 0.5rem;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.button-group-vertical > *:not(:first-child):not(:last-child) {
+  border-radius: 0;
+}
+
+/* Focus Management in Group */
+.button-group > *:focus {
+  z-index: 1;
+}
+
+/* Hover Management in Group */
+.button-group > *:hover {
+  z-index: 2;
+}
+
+/* Active Management in Group */
+.button-group > *:active {
+  z-index: 3;
+}
+
