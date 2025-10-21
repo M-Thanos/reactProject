@@ -15,6 +15,8 @@ import ClientButtonArea from './pages/ButtonControl/ClientPage/ClientButtonArea'
 import MarketersListPage from './pages/MarketersListPage';
 // @ts-ignore
 import ClientViewPage from './pages/ClientViewPage';
+// @ts-ignore
+import PageViewPage from './pages/PageViewPage';
 import Login from './pages/Auth/Login';
 import UserManagement from './pages/Auth/UserManagement';
 import InitialSetup from './pages/Setup/InitialSetup';
@@ -55,6 +57,9 @@ function App() {
       
       {/* Client View Route - Public - للعملاء فقط */}
       <Route path="/view/:linkId" element={<ClientViewPage />} />
+      
+      {/* Page View Route - Public - لعرض الصفحات */}
+      <Route path="/page/:linkId" element={<PageViewPage />} />
       
       {/* Setup Route - للإعداد الأولي فقط */}
       {/* احذف هذا الـroute بعد إنشاء المستخدمين! */}

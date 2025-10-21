@@ -28,6 +28,10 @@ import {
   uploadMedia,
   uploadDocument,
 } from '../../../config/storage';
+// استيراد دوال إنشاء الروابط
+import {
+  generatePageLink,
+} from '../../../config/firestore';
 
 export default function Layout() {
   const {
@@ -516,6 +520,38 @@ export default function Layout() {
     }
   };
 
+  // إنشاء رابط للصفحة الحالية
+  const handleGeneratePageLink = async () => {
+    if (!currentPageId) {
+      toast.error('لا توجد صفحة محددة');
+      return;
+    }
+
+    try {
+      toast.loading('جاري إنشاء رابط للصفحة...', { id: 'generating-page-link' });
+      
+      const linkId = await generatePageLink(currentPageId);
+      const fullLink = `${window.location.origin}/page/${linkId}`;
+      
+      // نسخ الرابط
+      await navigator.clipboard.writeText(fullLink);
+      
+      toast.success('تم إنشاء رابط الصفحة ونسخه! 🎉', { id: 'generating-page-link' });
+      
+      // إظهار الرابط في نافذة منبثقة
+      const showLink = window.confirm(
+        `تم إنشاء رابط الصفحة بنجاح!\n\nالرابط: ${fullLink}\n\nهل تريد فتح الصفحة في نافذة جديدة؟`
+      );
+      
+      if (showLink) {
+        window.open(fullLink, '_blank');
+      }
+    } catch (error) {
+      console.error('❌ خطأ في إنشاء رابط الصفحة:', error);
+      toast.error('حدث خطأ في إنشاء رابط الصفحة', { id: 'generating-page-link' });
+    }
+  };
+
   // إضافة وسائط مستقلة (بدون زر)
   const addStandaloneMedia = () => {
     const fileInput = document.createElement('input');
@@ -878,6 +914,7 @@ export default function Layout() {
               setShowRenameForm={setShowRenameForm}
               setShowColorPicker={setShowColorPicker}
               setMeasurementForm={setMeasurementForm}
+              handleGeneratePageLink={handleGeneratePageLink}
             />
           )}
 

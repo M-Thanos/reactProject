@@ -158,15 +158,15 @@ const ClientViewPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* رأس الصفحة - معلومات المسوق */}
-      <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-6 px-4 shadow-lg">
+      {/* رأس الصفحة - صفحة العميل */}
+      <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white py-6 px-4 shadow-lg">
         <div className="max-w-7xl mx-auto">
           <div className="text-center">
             <h1 className="text-3xl md:text-4xl font-bold mb-2">
-              مرحباً بك في صفحة {marketer?.name}
+              مرحباً بك في صفحة العميل
             </h1>
-            <p className="text-blue-100">
-              تم تخصيص هذه الصفحة خصيصاً لك
+            <p className="text-green-100">
+              استمتع بتجربة تسوق مخصصة لك
             </p>
             {marketer?.discount_code && (
               <div className="mt-4 inline-block bg-white bg-opacity-20 backdrop-blur-sm px-6 py-3 rounded-full">
@@ -176,6 +176,9 @@ const ClientViewPage = () => {
                 </p>
                 <p className="text-sm mt-1">
                   خصم {marketer.discount_value}{marketer.operation_type === '%' ? '%' : ' ريال'}
+                </p>
+                <p className="text-xs mt-2 opacity-80">
+                  من المسوق: {marketer.name}
                 </p>
               </div>
             )}
@@ -234,8 +237,9 @@ const ClientViewPage = () => {
 
       {/* تذييل الصفحة */}
       <div className="mt-8 py-6 bg-gray-100 dark:bg-gray-800 text-center text-gray-600 dark:text-gray-400">
-        <p>هذا الرابط مخصص لـ {marketer?.name}</p>
-        <p className="text-sm mt-2">للاستفسارات: {marketer?.email}</p>
+        <p>شكراً لزيارتك صفحة العميل</p>
+        <p className="text-sm mt-2">تم تخصيص هذه الصفحة لك من قبل: {marketer?.name}</p>
+        <p className="text-xs mt-1 opacity-70">للاستفسارات: {marketer?.email}</p>
       </div>
     </div>
   );

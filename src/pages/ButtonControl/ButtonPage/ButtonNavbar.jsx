@@ -5,6 +5,7 @@ import { FaPenToSquare } from 'react-icons/fa6';
 import { AiOutlineFullscreen } from 'react-icons/ai';
 import { MdDelete } from 'react-icons/md';
 import { AiOutlineMenu } from 'react-icons/ai';
+import { FaLink } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 
 const ButtonNavbar = ({
@@ -27,6 +28,7 @@ const ButtonNavbar = ({
   setShowRenameForm,
   setShowColorPicker,
   setMeasurementForm,
+  handleGeneratePageLink,
 }) => {
   const dropdownRef = useRef(null); // Reference to the dropdown
 
@@ -99,6 +101,12 @@ const ButtonNavbar = ({
           alert('من فضلك اختر زرًا');
         }
       },
+    },
+    {
+      id: 7,
+      name: 'إنشاء رابط للصفحة',
+      icon: <FaLink />,
+      action: handleGeneratePageLink,
     },
   ];
 

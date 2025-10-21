@@ -272,6 +272,30 @@ const MarketersListPage = () => {
     }
   };
 
+  // عرض صفحة العميل - إنشاء رابط مخصص لكل عميل
+  const handleViewClientPage = async (marketer) => {
+    try {
+      let linkId = marketer.linkId;
+      
+      // إذا لم يكن لديه رابط، نولد واحد جديد
+      if (!linkId) {
+        toast.loading('جاري إنشاء رابط العميل...', { id: 'creating-client-link' });
+        linkId = await generateLinkForMarketer(marketer.id);
+        toast.success('تم إنشاء رابط العميل بنجاح!', { id: 'creating-client-link' });
+        fetchMarketers(); // تحديث القائمة
+      }
+      
+      // فتح صفحة العميل في نافذة جديدة
+      const clientUrl = `${window.location.origin}/view/${linkId}`;
+      window.open(clientUrl, '_blank');
+      
+      toast.success(`تم فتح صفحة العميل المخصصة 🎉`);
+    } catch (error) {
+      console.error('❌ خطأ في فتح صفحة العميل:', error);
+      toast.error('حدث خطأ في فتح صفحة العميل');
+    }
+  };
+
   // نسخ الرابط الموجود
   const handleCopyLink = async (linkId) => {
     try {
@@ -345,6 +369,7 @@ const MarketersListPage = () => {
                     <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-right text-xs sm:text-sm font-semibold whitespace-nowrap hidden md:table-cell">حالة الكود</th>
                     <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-right text-xs sm:text-sm font-semibold whitespace-nowrap">الحالة</th>
                     <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-right text-xs sm:text-sm font-semibold whitespace-nowrap">الرابط</th>
+                    <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-right text-xs sm:text-sm font-semibold whitespace-nowrap">عرض العميل</th>
                     <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-right text-xs sm:text-sm font-semibold whitespace-nowrap">الإجراءات</th>
                   </tr>
                 </thead>
@@ -474,6 +499,16 @@ const MarketersListPage = () => {
                             <span className="hidden sm:inline text-xs">توليد</span>
                           </button>
                         )}
+                      </td>
+                      <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-xs sm:text-sm">
+                        <button
+                          onClick={() => handleViewClientPage(marketer)}
+                          className="bg-blue-500 hover:bg-blue-600 text-white p-1.5 sm:px-3 sm:py-2 rounded-lg transition-colors flex items-center gap-1 sm:gap-2"
+                          title="عرض صفحة العميل"
+                        >
+                          <FaUser className="text-xs sm:text-sm" />
+                          <span className="hidden sm:inline text-xs">عرض العميل</span>
+                        </button>
                       </td>
                       <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-xs sm:text-sm">
                         <div className="flex items-center gap-1 sm:gap-2">
