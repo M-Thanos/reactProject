@@ -51,30 +51,80 @@ export default function SortableItem({ id, button, onClick, selectedButton, show
 
   // التحقق من وجود shape_details وتطبيق الأنماط المناسبة
   const getButtonStyles = () => {
+    // دالة للتحقق من صحة اللون - تحسين التحقق من الألوان
+    const isValidColor = (color) => {
+      if (!color || color === '' || color === 'transparent') return false;
+      // التحقق من صيغة الألوان الصحيحة
+      if (typeof color !== 'string') return false;
+      // التحقق من hex, rgb, rgba, أسماء الألوان
+      return /^#[0-9A-Fa-f]{3,8}$|^rgb|^rgba|^hsl|^hsla|^[a-z]+$/i.test(color);
+    };
+
+    // دالة للحصول على اللون من مصادر متعددة
+    const getBackgroundColor = () => {
+      // للوسائط المستقلة، يجب أن يكون اللون شفاف دائماً
+      if (button.type === 'standalone-media') {
+        return 'transparent';
+      }
+      
+      // الأولوية: shape_details.background_color > button.background_color > button.color > default
+      const sources = [
+        button.shape_details?.background_color,
+        button.background_color,
+        button.backgroundColor,
+        button.color,
+      ];
+      
+      for (const color of sources) {
+        if (isValidColor(color)) {
+          return color;
+        }
+      }
+      
+      return '#3b82f6'; // اللون الافتراضي
+    };
+
+    const getTextColor = () => {
+      // الأولوية: shape_details.text_color > button.text_color > button.textColor > default
+      const sources = [
+        button.shape_details?.text_color,
+        button.text_color,
+        button.textColor,
+      ];
+      
+      for (const color of sources) {
+        if (isValidColor(color)) {
+          return color;
+        }
+      }
+      
+      return '#ffffff'; // اللون الافتراضي
+    };
+
     // الأنماط الأساسية للزر
+    const backgroundColor = getBackgroundColor();
+    const textColor = getTextColor();
+
     const defaultStyles = {
       transform: CSS.Transform.toString(transform),
       transition,
-      height: button.height,
-      backgroundColor: button.background_color || button.color || '#3b82f6',
-      color: button.text_color || '#ffffff',
+      height: '100%',
+      backgroundColor: backgroundColor,
+      color: textColor,
       fontSize: '14px',
       borderRadius: '4px',
-      width: button.width || 160,
-      minWidth: '80px',
-      minHeight: '40px'
+      width: '100%',
+      minWidth: '0',
+      minHeight: '0',
+      border: 'none',
+      outline: 'none',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      boxSizing: 'border-box',
+      flexDirection: 'column',
+      gap: '4px'
     };
-
-    // إضافة console.log للتأكد من الألوان (فقط عند التغيير)
-    if (button.id && (button.background_color || button.color)) {
-      console.log(`🎨 Button ${button.id} colors:`, {
-        background_color: button.background_color,
-        color: button.color,
-        text_color: button.text_color,
-        finalBackground: defaultStyles.backgroundColor,
-        finalColor: defaultStyles.color
-      });
-    }
 
     // تطبيق أنماط الشكل المخصص إذا كانت موجودة
     if (button.shape_details && button.type === 'shape') {
@@ -88,15 +138,11 @@ export default function SortableItem({ id, button, onClick, selectedButton, show
         defaultStyles.borderRadius = shapeStyle.borderRadius;
       }
       
-      // تطبيق الألوان من shape_details إذا كانت موجودة
-      if (button.shape_details.background_color) {
-        defaultStyles.backgroundColor = button.shape_details.background_color;
-      }
-      if (button.shape_details.text_color) {
-        defaultStyles.color = button.shape_details.text_color;
-      }
       if (button.shape_details.font_size) {
         defaultStyles.fontSize = `${button.shape_details.font_size}px`;
+      }
+      if (button.shape_details.border_radius) {
+        defaultStyles.borderRadius = `${button.shape_details.border_radius}px`;
       }
     }
 
@@ -126,26 +172,31 @@ export default function SortableItem({ id, button, onClick, selectedButton, show
 
   // النص الأساسي للزر
   const buttonText = button.shape_details?.text || button.name || `شكل ${button.id}`;
+  const isStandaloneMedia = button.type === 'standalone-media';
 
+  const buttonStyles = getButtonStyles();
+  
   return (
     <button
       ref={setNodeRef}
-      style={getButtonStyles()}
+      style={buttonStyles}
       {...attributes}
       {...(showControls && button.is_fixed ? {} : listeners)}
       onClick={onClick}
-      className={`w-full flex flex-col items-center justify-center gap-1 py-2 px-4 rounded shadow focus:outline-none
-        ${showControls 
-          ? `${button.is_fixed ? 'text-white hover:bg-gray-400' : ''} 
-             ${selectedButton?.id === button.id ? 'bg-green-300 hover:bg-green-300 text-black font-bold' : ''}`
-          : 'hover:opacity-90'
-        }`}
+      className={`w-full h-full flex flex-col items-center justify-center gap-1 focus:outline-none
+        ${!showControls ? 'hover:opacity-90' : ''}
+        ${showControls && button.is_fixed ? 'hover:bg-gray-400' : ''}
+        ${showControls && selectedButton?.id === button.id ? 'font-bold' : ''}
+        ${isStandaloneMedia ? 'shadow-none' : 'shadow'}`}
     >
-      <div className="flex items-center justify-center gap-2">
-        {(showControls && button.is_fixed && <BsPinAngleFill />) ||
-          (selectedButton?.id === button.id && <FcOk />)}
-        {buttonText}
-      </div>
+      {/* إخفاء النص للوسائط المستقلة إلا في وضع التحكم */}
+      {(!isStandaloneMedia || showControls) && (
+        <div className="flex items-center justify-center gap-2">
+          {(showControls && button.is_fixed && <BsPinAngleFill />) ||
+            (selectedButton?.id === button.id && <FcOk />)}
+          {buttonText}
+        </div>
+      )}
       
       {/* عرض نتيجة العملية الحسابية */}
       {calculationResult && !showControls && (

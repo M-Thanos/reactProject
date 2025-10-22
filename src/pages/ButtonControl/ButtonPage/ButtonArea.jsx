@@ -1,12 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import {
-  DndContext,
-  closestCenter,
-  PointerSensor,
-  useSensor,
-  useSensors,
-} from '@dnd-kit/core';
-import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable';
+import { Rnd } from 'react-rnd';
 import SortableItem from '../SortableItem';
 import {
   FaFilePdf,
@@ -30,6 +23,7 @@ import {
 import ImageModal from './ImageModal';
 import FilePreviewModal from './FilePreviewModal';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../contexts/AuthContext';
 
 const GRID_SIZE = 160;
 const GRID_GAP = 20;
@@ -151,10 +145,12 @@ export default function ButtonArea({
   buttons: providedButtons,
   isTimerRunning,
   clientButtonArea,
+  providedPositions,
 }) {
   const [draggingButtonId, setDraggingButtonId] = useState(null);
   const [hoveredButton, setHoveredButton] = useState(null);
   const [positions, setPositions] = useState({});
+  const [sizes, setSizes] = useState({});
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState(null);
@@ -168,6 +164,7 @@ export default function ButtonArea({
 
   const buttons = providedButtons || [];
   const navigate = useNavigate();
+  const { hasRole } = useAuth();
 
   const handleBackgroundColorChange = (color) => {
     setBackgroundColor(color);
@@ -181,14 +178,6 @@ export default function ButtonArea({
   const handleMouseLeave = () => {
     setHoveredButton(null);
   };
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 1,
-      },
-    }),
-  );
 
   const containerRef = useRef(null);
 
@@ -214,6 +203,13 @@ export default function ButtonArea({
   useEffect(() => {
     const fetchButtonPositions = async () => {
       try {
+        // إذا كانت المواقع ممررة من الخارج (مثل PageViewPage)، استخدمها مباشرة
+        if (providedPositions && Object.keys(providedPositions).length > 0) {
+          console.log('📍 استخدام المواقع الممررة:', providedPositions);
+          setPositions(providedPositions);
+          return;
+        }
+
         const savedPositions = localStorage.getItem('buttonPositions');
         if (savedPositions) {
           const positions = JSON.parse(savedPositions);
@@ -260,42 +256,27 @@ export default function ButtonArea({
     };
   
     fetchButtonPositions();
+  }, [pages, providedPositions]);
+
+  // تحميل أحجام الأزرار من localStorage
+  useEffect(() => {
+    const savedSizes = localStorage.getItem('buttonSizes');
+    if (savedSizes) {
+      const parsedSizes = JSON.parse(savedSizes);
+      // تنظيف الأحجام: إزالة أحجام الأزرار المحذوفة
+      const allButtons = pages.reduce((acc, page) => {
+        return [...acc, ...page.buttons];
+      }, []);
+      const cleanedSizes = {};
+      Object.entries(parsedSizes).forEach(([buttonId, size]) => {
+        if (allButtons.some(btn => btn.id === buttonId || btn.id === Number(buttonId))) {
+          cleanedSizes[buttonId] = size;
+        }
+      });
+      setSizes(cleanedSizes);
+      localStorage.setItem('buttonSizes', JSON.stringify(cleanedSizes));
+    }
   }, [pages]);
-
-  const handleDragEnd = async (event) => {
-    const { active, delta } = event;
-    if (!active) return;
-
-    const currentPosition = positions[active.id] || { x: 0, y: 0 };
-    const mainRect = containerRef.current.getBoundingClientRect();
-
-    const newX = Math.round(currentPosition.x + delta.x);
-    const newY = Math.round(currentPosition.y + delta.y);
-
-    const maxY = Math.max(mainRect.height * 2, 2000);
-    const finalX = Math.round(
-      Math.max(0, Math.min(newX, mainRect.width - 100)),
-    );
-    const finalY = Math.round(Math.max(0, Math.min(newY, maxY)));
-
-    const newPositions = {
-      ...positions,
-      [active.id]: {
-        ...positions[active.id],
-        x: finalX,
-        y: finalY,
-      },
-    };
-
-    setPositions(newPositions);
-    localStorage.setItem('buttonPositions', JSON.stringify(newPositions));
-    setHasUnsavedChanges(true);
-    setDraggingButtonId(null);
-  };
-
-  const handleDragStart = (event) => {
-    setDraggingButtonId(event.active.id);
-  };
 
   const handleClick = (button) => {
     if (!showControls) {
@@ -381,7 +362,10 @@ export default function ButtonArea({
         }
       }
 
-      setButtons(updatedButtons);
+      // تحديث الأزرار فقط إذا كان setButtons موجوداً
+      if (setButtons) {
+        setButtons(updatedButtons);
+      }
     } else {
       // وضع التحكم - اختيار الزر للتعديل
       setSelectedButton(button.id === selectedButton?.id ? null : button);
@@ -530,7 +514,7 @@ export default function ButtonArea({
   return (
     <main
       ref={containerRef}
-      className="relative overflow-visible mt-24 sm:mt-20 lg:mt-0 flex-1 p-2 sm:p-4 md:p-6 rounded-md"
+      className="relative overflow-visible mt-24 sm:mt-20 lg:mt-0 flex-1 p-2 sm:p-4 md:p-6 rounded-md mb-20"
       style={{
         height: 'calc(70vh - 5rem)',
         overflowY: 'auto',
@@ -562,16 +546,19 @@ export default function ButtonArea({
           <span className="sm:hidden">{showControls ? 'إخفاء' : 'إظهار'}</span>
         </Button>
 
-        <Button
-          onClick={() => navigate('/marketers-list')}
-          disabled={isTimerRunning}
-          variant="success"
-          size="sm"
-          className="text-xs sm:text-sm"
-        >
-          <span className="hidden sm:inline">قائمة المسوقين</span>
-          <span className="sm:hidden">المسوقين</span>
-        </Button>
+        {/* قائمة المسوقين - للأدمن فقط */}
+        {hasRole('admin') && (
+          <Button
+            onClick={() => navigate('/marketers-list')}
+            disabled={isTimerRunning}
+            variant="success"
+            size="sm"
+            className="text-xs sm:text-sm"
+          >
+            <span className="hidden sm:inline">قائمة المسوقين</span>
+            <span className="sm:hidden">المسوقين</span>
+          </Button>
+        )}
 
         <Button
           onClick={() => setShowColorPicker(true)}
@@ -593,76 +580,109 @@ export default function ButtonArea({
           size="sm"
           className="fixed bottom-2 sm:bottom-4 left-1/2 transform -translate-x-1/2 z-50 text-xs sm:text-sm md:text-base"
         >
-          حفظ المواقع
+          حفظ المواقع والأحجام
         </Button>
       )}
 
       <div className="relative h-full overflow-y-visible">
         <div className="relative min-h-full pb-96">
-          <DndContext
-            sensors={showControls ? sensors : []}
-            onDragEnd={handleDragEnd}
-            onDragStart={handleDragStart}
+          {/* Grid Background */}
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage: `
+                repeating-linear-gradient(0deg, transparent, transparent ${
+                  GRID_SIZE - 51
+                }px, rgba(0,0,0,0.15) ${GRID_SIZE - 50}px),
+                repeating-linear-gradient(90deg, transparent, transparent ${
+                  GRID_SIZE + GRID_GAP - 1
+                }px, rgba(0,0,0,0.15) ${GRID_SIZE + GRID_GAP}px)
+              `,
+              backgroundSize: `${GRID_SIZE + GRID_GAP}px ${GRID_SIZE - 50}px`,
+              pointerEvents: 'none',
+              minHeight: '200vh',
+              overflow: 'visible',
+              opacity: 0.8,
+            }}
+          />
+
+          <div
+            className="relative"
+            style={{ minHeight: '200vh', overflow: 'visible' }}
           >
-            {/* Grid Background */}
-            <div
-              className="absolute inset-0"
-              style={{
-                backgroundImage: `
-                  repeating-linear-gradient(0deg, transparent, transparent ${
-                    GRID_SIZE - 51
-                  }px, rgba(0,0,0,0.15) ${GRID_SIZE - 50}px),
-                  repeating-linear-gradient(90deg, transparent, transparent ${
-                    GRID_SIZE + GRID_GAP - 1
-                  }px, rgba(0,0,0,0.15) ${GRID_SIZE + GRID_GAP}px)
-                `,
-                backgroundSize: `${GRID_SIZE + GRID_GAP}px ${GRID_SIZE - 50}px`,
-                pointerEvents: 'none',
-                minHeight: '200vh',
-                overflow: 'visible',
-                opacity: 0.8,
-              }}
-            />
+            {buttons.map((button) => {
+              if (!showControls && button.is_active === false) {
+                return null;
+              }
 
-            <div
-              className="relative"
-              style={{ minHeight: '200vh', overflow: 'visible' }}
-            >
-              {buttons.map((button) => {
-                if (!showControls && button.is_active === false) {
-                  return null;
-                }
+              const buttonWidth = sizes[button.id]?.width || button.width || 160;
+              const buttonHeight = sizes[button.id]?.height || button.height || 160;
+              const buttonX = positions[button.id]?.x || 0;
+              const buttonY = positions[button.id]?.y || 0;
 
-                return (
+              return (
+                <Rnd
+                  key={button.id}
+                  size={{ width: buttonWidth, height: buttonHeight }}
+                  position={{ x: buttonX, y: buttonY }}
+                  onDragStop={(e, d) => {
+                    if (!showControls) return;
+                    const mainRect = containerRef.current.getBoundingClientRect();
+                    const maxY = Math.max(mainRect.height * 2, 2000);
+                    const finalX = Math.round(Math.max(0, Math.min(d.x, mainRect.width - 100)));
+                    const finalY = Math.round(Math.max(0, Math.min(d.y, maxY)));
+
+                    const newPositions = {
+                      ...positions,
+                      [button.id]: {
+                        ...positions[button.id],
+                        x: finalX,
+                        y: finalY,
+                      },
+                    };
+
+                    setPositions(newPositions);
+                    localStorage.setItem('buttonPositions', JSON.stringify(newPositions));
+                    setHasUnsavedChanges(true);
+                  }}
+                  onResizeStop={(e, direction, ref, delta, position) => {
+                    if (!showControls) return;
+                    const newWidth = parseInt(ref.style.width);
+                    const newHeight = parseInt(ref.style.height);
+
+                    const newSizes = {
+                      ...sizes,
+                      [button.id]: {
+                        width: newWidth,
+                        height: newHeight,
+                      },
+                    };
+
+                    setSizes(newSizes);
+                    localStorage.setItem('buttonSizes', JSON.stringify(newSizes));
+                    setHasUnsavedChanges(true);
+                  }}
+                  disableDragging={!showControls}
+                  enableResizing={showControls}
+                  minWidth={80}
+                  minHeight={40}
+                  bounds="parent"
+                  style={{
+                    zIndex: draggingButtonId === button.id ? 1000 : 1,
+                    cursor: showControls ? 'move' : 'pointer',
+                    boxShadow: draggingButtonId === button.id
+                      ? '0 8px 20px rgba(0,0,0,0.2)'
+                      : '0 2px 5px rgba(0,0,0,0.1)',
+                    opacity: showControls && button.is_active === false ? 0.5 : 1,
+                  }}
+                  className="button-rnd"
+                >
                   <div
-                    key={button.id}
                     id={`button-${button.id}`}
                     style={{
-                      width: `${button.width || 160}px`,
-                      minWidth: '80px',
-                      position: 'absolute',
-                      transform: positions[button.id]
-                        ? `translate(${positions[button.id].x}px, ${
-                            positions[button.id].y
-                          }px)`
-                        : 'none',
-                      zIndex: draggingButtonId === button.id ? 1000 : 1,
-                      transition:
-                        draggingButtonId === button.id
-                          ? 'transform 0.05s linear'
-                          : 'transform 0.2s cubic-bezier(0.25, 1, 0.5, 1)',
-                      cursor: showControls
-                        ? draggingButtonId === button.id
-                          ? 'grabbing'
-                          : 'grab'
-                        : 'pointer',
-                      boxShadow:
-                        draggingButtonId === button.id
-                          ? '0 8px 20px rgba(0,0,0,0.2)'
-                          : '0 2px 5px rgba(0,0,0,0.1)',
-                      touchAction: showControls ? 'none' : 'auto',
+                      width: '100%',
+                      height: '100%',
                       overflow: 'visible',
-                      opacity: showControls && button.is_active === false ? 0.5 : 1,
                     }}
                     onClick={() => handleClick(button)}
                     onMouseEnter={() => handleMouseEnter(button)}
@@ -733,10 +753,10 @@ export default function ButtonArea({
                       />
                     )}
                   </div>
-                );
-              })}
-            </div>
-          </DndContext>
+                </Rnd>
+              );
+            })}
+          </div>
         </div>
       </div>
 

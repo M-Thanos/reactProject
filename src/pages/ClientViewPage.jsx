@@ -63,22 +63,87 @@ const ClientViewPage = () => {
         const pagesData = await getAllPagesWithButtons();
         
         if (pagesData && pagesData.length > 0) {
+          // دالة محسّنة للتحقق من صحة اللون
+          const isValidColor = (color) => {
+            if (!color || color === '' || color === 'transparent') return false;
+            if (typeof color !== 'string') return false;
+            // التحقق من hex, rgb, rgba, hsl, hsla, أسماء الألوان
+            return /^#[0-9A-Fa-f]{3,8}$|^rgb|^rgba|^hsl|^hsla|^[a-z]+$/i.test(color);
+          };
+
+          const getBackgroundColor = (btn) => {
+            const sources = [
+              btn.shapeDetails?.background_color,
+              btn.shape_details?.background_color,
+              btn.backgroundColor,
+              btn.background_color,
+              btn.color,
+            ];
+            
+            for (const color of sources) {
+              if (isValidColor(color)) {
+                return color;
+              }
+            }
+            
+            return '#3b82f6';
+          };
+
+          const getTextColor = (btn) => {
+            const sources = [
+              btn.shapeDetails?.text_color,
+              btn.shape_details?.text_color,
+              btn.textColor,
+              btn.text_color,
+            ];
+            
+            for (const color of sources) {
+              if (isValidColor(color)) {
+                return color;
+              }
+            }
+            
+            return '#ffffff';
+          };
+
           // تنسيق البيانات
           const formattedPages = pagesData.map((page) => ({
             ...page,
             is_active: page.isActive !== undefined ? page.isActive : true,
-            buttons: (page.buttons || []).map((btn) => ({
-              ...btn,
-              page_id: btn.pageId || page.id,
-              is_active: btn.isActive !== undefined ? btn.isActive : true,
-              background_color: btn.backgroundColor || btn.background_color || '#3b82f6',
-              text_color: btn.textColor || btn.text_color || '#ffffff',
-              shape_details: btn.shapeDetails || btn.shape_details || null,
-              linked_buttons: btn.linkedButtons || btn.linked_buttons || null,
-              target_page: btn.targetPage || btn.target_page || null,
-              media_type: btn.mediaType || btn.media_type || null,
-              is_fixed: btn.isFixed || btn.is_fixed || false,
-            })),
+            buttons: (page.buttons || []).map((btn) => {
+              const backgroundColor = getBackgroundColor(btn);
+              const textColor = getTextColor(btn);
+              
+              // تنسيق shape_details إذا كان موجوداً
+              let shapeDetails = btn.shapeDetails || btn.shape_details || null;
+              if (shapeDetails && typeof shapeDetails === 'object') {
+                shapeDetails = {
+                  ...shapeDetails,
+                  background_color: isValidColor(shapeDetails.background_color) 
+                    ? shapeDetails.background_color 
+                    : backgroundColor,
+                  text_color: isValidColor(shapeDetails.text_color) 
+                    ? shapeDetails.text_color 
+                    : textColor,
+                };
+              }
+
+              return {
+                ...btn,
+                page_id: btn.pageId || page.id,
+                is_active: btn.isActive !== undefined ? btn.isActive : true,
+                background_color: backgroundColor,
+                backgroundColor: backgroundColor,
+                text_color: textColor,
+                textColor: textColor,
+                color: backgroundColor,
+                shape_details: shapeDetails,
+                linked_buttons: btn.linkedButtons || btn.linked_buttons || null,
+                target_page: btn.targetPage || btn.target_page || null,
+                media_type: btn.mediaType || btn.media_type || null,
+                is_fixed: btn.isFixed || btn.is_fixed || false,
+              };
+            }),
           }));
 
           setPages(formattedPages);
@@ -215,9 +280,11 @@ const ClientViewPage = () => {
             <div className="p-4">
               <ButtonArea
                 buttons={buttons}
+                setButtons={setButtons}
                 pages={pages}
                 currentPageId={currentPageId}
                 setCurrentPageId={setCurrentPageId}
+                showControls={false}
                 isClientView={true}
                 marketerInfo={marketer}
               />

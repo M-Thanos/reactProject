@@ -2,6 +2,148 @@
   font-family: 'Tajawal', serif;
 }
 
+/* React RND Resizable Styles */
+.button-rnd .react-resizable-handle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background-color: #3b82f6;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+}
+
+.button-rnd .react-resizable-handle-se {
+  bottom: -5px;
+  right: -5px;
+  cursor: se-resize;
+}
+
+.button-rnd .react-resizable-handle-sw {
+  bottom: -5px;
+  left: -5px;
+  cursor: sw-resize;
+}
+
+.button-rnd .react-resizable-handle-ne {
+  top: -5px;
+  right: -5px;
+  cursor: ne-resize;
+}
+
+.button-rnd .react-resizable-handle-nw {
+  top: -5px;
+  left: -5px;
+  cursor: nw-resize;
+}
+
+.button-rnd .react-resizable-handle-e {
+  top: 50%;
+  right: -5px;
+  transform: translateY(-50%);
+  cursor: e-resize;
+}
+
+.button-rnd .react-resizable-handle-w {
+  top: 50%;
+  left: -5px;
+  transform: translateY(-50%);
+  cursor: w-resize;
+}
+
+.button-rnd .react-resizable-handle-n {
+  top: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  cursor: n-resize;
+}
+
+.button-rnd .react-resizable-handle-s {
+  bottom: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  cursor: s-resize;
+}
+
+.button-rnd:hover .react-resizable-handle {
+  background-color: #2563eb;
+}
+
+.button-rnd .react-draggable-dragging {
+  cursor: grabbing !important;
+}
+
+/* ضمان أن الزر يملأ الحاوية بالكامل */
+.button-rnd button {
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 4px !important;
+  border: none !important;
+  outline: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+  flex-shrink: 0 !important;
+  overflow: hidden !important;
+}
+
+/* إزالة أي تأثيرات افتراضية للزر */
+.button-rnd button:focus,
+.button-rnd button:active,
+.button-rnd button:hover {
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* ضمان أن الألوان تظهر بشكل صحيح */
+.button-rnd {
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* ضمان أن المحتوى الداخلي يظهر بشكل صحيح */
+.button-rnd > div {
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
+  position: relative !important;
+}
+
+.button-rnd > div > div {
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
+}
+
+/* ضمان أن الألوان تظهر بشكل صحيح في جميع الحالات */
+.button-rnd button * {
+  color: inherit !important;
+}
+
+/* إزالة أي تأثيرات شفافية */
+.button-rnd button {
+  opacity: 1 !important;
+}
+
+/* إزالة أي تأثيرات شفافية إضافية وضمان ظهور الألوان */
+.button-rnd button:hover,
+.button-rnd button:focus,
+.button-rnd button:active {
+  opacity: 1 !important;
+}
+
+/* تنسيق خاص للوسائط المستقلة (standalone-media) */
+.button-rnd button[style*="transparent"] {
+  padding: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
 
 .tooltip {
   position: absolute;

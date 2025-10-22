@@ -60,22 +60,86 @@ export default function Layout() {
           return;
         }
 
+        // دالة محسّنة للتحقق من صحة اللون
+        const isValidColor = (color) => {
+          if (!color || color === '' || color === 'transparent') return false;
+          if (typeof color !== 'string') return false;
+          return /^#[0-9A-Fa-f]{3,8}$|^rgb|^rgba|^hsl|^hsla|^[a-z]+$/i.test(color);
+        };
+
+        const getBackgroundColor = (btn) => {
+          const sources = [
+            btn.shapeDetails?.background_color,
+            btn.shape_details?.background_color,
+            btn.backgroundColor,
+            btn.background_color,
+            btn.color,
+          ];
+          
+          for (const color of sources) {
+            if (isValidColor(color)) {
+              return color;
+            }
+          }
+          
+          return '#3b82f6';
+        };
+
+        const getTextColor = (btn) => {
+          const sources = [
+            btn.shapeDetails?.text_color,
+            btn.shape_details?.text_color,
+            btn.textColor,
+            btn.text_color,
+          ];
+          
+          for (const color of sources) {
+            if (isValidColor(color)) {
+              return color;
+            }
+          }
+          
+          return '#ffffff';
+        };
+
         // تحويل التسمية من camelCase إلى snake_case لتوافق الكود الموجود
         const formattedPages = pagesWithButtons.map((page) => ({
           ...page,
           is_active: page.isActive !== undefined ? page.isActive : true,
-          buttons: (page.buttons || []).map((btn) => ({
-            ...btn,
-            page_id: btn.pageId || page.id,
-            is_active: btn.isActive !== undefined ? btn.isActive : true,
-            background_color: btn.backgroundColor || btn.background_color || '#3b82f6',
-            text_color: btn.textColor || btn.text_color || '#ffffff',
-            shape_details: btn.shapeDetails || btn.shape_details || null,
-            linked_buttons: btn.linkedButtons || btn.linked_buttons || null,
-            target_page: btn.targetPage || btn.target_page || null,
-            media_type: btn.mediaType || btn.media_type || null,
-            is_fixed: btn.isFixed || btn.is_fixed || false,
-          })),
+          buttons: (page.buttons || []).map((btn) => {
+            const backgroundColor = getBackgroundColor(btn);
+            const textColor = getTextColor(btn);
+            
+            // تنسيق shape_details إذا كان موجوداً
+            let shapeDetails = btn.shapeDetails || btn.shape_details || null;
+            if (shapeDetails && typeof shapeDetails === 'object') {
+              shapeDetails = {
+                ...shapeDetails,
+                background_color: isValidColor(shapeDetails.background_color) 
+                  ? shapeDetails.background_color 
+                  : backgroundColor,
+                text_color: isValidColor(shapeDetails.text_color) 
+                  ? shapeDetails.text_color 
+                  : textColor,
+              };
+            }
+
+            return {
+              ...btn,
+              page_id: btn.pageId || page.id,
+              is_active: btn.isActive !== undefined ? btn.isActive : true,
+              background_color: backgroundColor,
+              backgroundColor: backgroundColor,
+              text_color: textColor,
+              textColor: textColor,
+              color: backgroundColor,
+              shape_details: shapeDetails,
+              linked_buttons: btn.linkedButtons || btn.linked_buttons || null,
+              target_page: btn.targetPage || btn.target_page || null,
+              media_type: btn.mediaType || btn.media_type || null,
+              is_fixed: btn.isFixed || btn.is_fixed || false,
+            };
+          }),
         }));
 
         setPages(formattedPages);
@@ -189,22 +253,86 @@ export default function Layout() {
         return;
       }
 
+      // دالة محسّنة للتحقق من صحة اللون
+      const isValidColor = (color) => {
+        if (!color || color === '' || color === 'transparent') return false;
+        if (typeof color !== 'string') return false;
+        return /^#[0-9A-Fa-f]{3,8}$|^rgb|^rgba|^hsl|^hsla|^[a-z]+$/i.test(color);
+      };
+
+      const getBackgroundColor = (btn) => {
+        const sources = [
+          btn.shapeDetails?.background_color,
+          btn.shape_details?.background_color,
+          btn.backgroundColor,
+          btn.background_color,
+          btn.color,
+        ];
+        
+        for (const color of sources) {
+          if (isValidColor(color)) {
+            return color;
+          }
+        }
+        
+        return '#3b82f6';
+      };
+
+      const getTextColor = (btn) => {
+        const sources = [
+          btn.shapeDetails?.text_color,
+          btn.shape_details?.text_color,
+          btn.textColor,
+          btn.text_color,
+        ];
+        
+        for (const color of sources) {
+          if (isValidColor(color)) {
+            return color;
+          }
+        }
+        
+        return '#ffffff';
+      };
+
       // تحويل التسمية لتوافق الكود الموجود
       const formattedPages = pagesWithButtons.map((page) => ({
         ...page,
         is_active: page.isActive !== undefined ? page.isActive : true,
-        buttons: (page.buttons || []).map((btn) => ({
-          ...btn,
-          page_id: btn.pageId || page.id,
-          is_active: btn.isActive !== undefined ? btn.isActive : true,
-          background_color: btn.backgroundColor || btn.background_color || '#3b82f6',
-          text_color: btn.textColor || btn.text_color || '#ffffff',
-          shape_details: btn.shapeDetails || btn.shape_details || null,
-          linked_buttons: btn.linkedButtons || btn.linked_buttons || null,
-          target_page: btn.targetPage || btn.target_page || null,
-          media_type: btn.mediaType || btn.media_type || null,
-          is_fixed: btn.isFixed || btn.is_fixed || false,
-        })),
+        buttons: (page.buttons || []).map((btn) => {
+          const backgroundColor = getBackgroundColor(btn);
+          const textColor = getTextColor(btn);
+          
+          // تنسيق shape_details إذا كان موجوداً
+          let shapeDetails = btn.shapeDetails || btn.shape_details || null;
+          if (shapeDetails && typeof shapeDetails === 'object') {
+            shapeDetails = {
+              ...shapeDetails,
+              background_color: isValidColor(shapeDetails.background_color) 
+                ? shapeDetails.background_color 
+                : backgroundColor,
+              text_color: isValidColor(shapeDetails.text_color) 
+                ? shapeDetails.text_color 
+                : textColor,
+            };
+          }
+
+          return {
+            ...btn,
+            page_id: btn.pageId || page.id,
+            is_active: btn.isActive !== undefined ? btn.isActive : true,
+            background_color: backgroundColor,
+            backgroundColor: backgroundColor,
+            text_color: textColor,
+            textColor: textColor,
+            color: backgroundColor,
+            shape_details: shapeDetails,
+            linked_buttons: btn.linkedButtons || btn.linked_buttons || null,
+            target_page: btn.targetPage || btn.target_page || null,
+            media_type: btn.mediaType || btn.media_type || null,
+            is_fixed: btn.isFixed || btn.is_fixed || false,
+          };
+        }),
       }));
 
       console.log('📊 الصفحات مع الأزرار:', formattedPages);
@@ -321,7 +449,11 @@ export default function Layout() {
         clicks: 0,
         background_color: '#3b82f6',
         text_color: '#ffffff',
-        shape_details: shapeConfig.shape_details
+        shape_details: {
+          ...shapeConfig.shape_details,
+          background_color: '#3b82f6',
+          text_color: '#ffffff'
+        }
       };
       console.log('📦 بيانات الزر الجديد:', newButton);
 
@@ -345,6 +477,8 @@ export default function Layout() {
           text_color: newButton.text_color,
           shapeDetails: newButton.shape_details,
           shape_details: newButton.shape_details,
+          // إضافة الألوان مباشرة في البيانات الرئيسية أيضاً
+          color: newButton.background_color,
         };
 
         console.log('🌐 إضافة الزر إلى Firestore...');

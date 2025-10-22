@@ -83,11 +83,11 @@ function App() {
                   element={<ClientButtonArea showControls={true} />} 
                 />
 
-                {/* Marketers List - Admin and Designer only */}
+                {/* Marketers List - Admin only */}
                 <Route 
                   path="/marketers-list" 
                   element={
-                    <ProtectedRoute allowedRoles={['admin', 'designer']}>
+                    <ProtectedRoute allowedRoles={['admin']}>
                       <MarketersListPage />
                     </ProtectedRoute>
                   } 

@@ -16,7 +16,12 @@ const PageViewPage = () => {
   const [loading, setLoading] = useState(true);
   const [pageData, setPageData] = useState(null);
   const [error, setError] = useState(null);
+  const [buttons, setButtons] = useState([]);
+  const [pages, setPages] = useState([]);
+  const [currentPageId, setCurrentPageId] = useState(null);
+  const [buttonPositions, setButtonPositions] = useState({});
 
+  // useEffect الأول: جلب بيانات الصفحة
   useEffect(() => {
     const fetchPageData = async () => {
       try {
@@ -32,7 +37,14 @@ const PageViewPage = () => {
         }
 
         setPageData(data);
+        setPages(data.pages || [data.page]);
+        setButtons(data.buttons || []);
+        setCurrentPageId(data.page?.id);
+        setButtonPositions(data.buttonPositions || {});
         console.log('✅ تم جلب بيانات الصفحة بنجاح');
+        console.log('📍 مواقع الأزرار:', data.buttonPositions);
+        console.log('🔘 الأزرار:', data.buttons);
+        console.log('📄 جميع الصفحات:', data.pages);
       } catch (err) {
         console.error('❌ خطأ في جلب بيانات الصفحة:', err);
         setError(err.message || 'حدث خطأ في جلب البيانات');
@@ -49,6 +61,16 @@ const PageViewPage = () => {
       setLoading(false);
     }
   }, [linkId]);
+
+  // useEffect الثاني: تحديث الأزرار عند تغيير الصفحة الحالية
+  useEffect(() => {
+    if (pages && currentPageId) {
+      const currentPage = pages.find((p) => p.id === currentPageId);
+      if (currentPage) {
+        setButtons(currentPage.buttons || []);
+      }
+    }
+  }, [currentPageId, pages]);
 
   if (loading) {
     return (
@@ -88,60 +110,67 @@ const PageViewPage = () => {
     );
   }
 
-  const { page, buttons, marketer } = pageData;
+  const { page, marketer } = pageData;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* رأس الصفحة */}
-      <div className="bg-gradient-to-r from-purple-500 to-pink-600 text-white py-6 px-4 shadow-lg">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center">
-            <h1 className="text-3xl md:text-4xl font-bold mb-2">
-              {page?.name || page?.title || 'صفحة مخصصة'}
-            </h1>
-            <p className="text-purple-100">
-              استمتع بتجربة تفاعلية مخصصة
-            </p>
-            {marketer && (
-              <div className="mt-4 inline-block bg-white bg-opacity-20 backdrop-blur-sm px-6 py-3 rounded-full">
-                <p className="text-sm mb-1">من المسوق:</p>
-                <p className="text-lg font-bold">
-                  {marketer.name}
-                </p>
-                {marketer.discount_code && (
-                  <p className="text-sm mt-1">
-                    كود الخصم: {marketer.discount_code}
-                  </p>
-                )}
+    <div className="min-h-screen bg-white dark:bg-gray-900">
+      {/* Header جميل */}
+      <header className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 text-white shadow-lg">
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            {/* اسم الصفحة */}
+            <div className="text-center sm:text-right">
+              <h1 className="text-2xl sm:text-3xl font-bold mb-2">
+                {page?.name || page?.title || 'صفحة تفاعلية'}
+              </h1>
+              <p className="text-blue-100 text-sm sm:text-base">
+                استمتع بتجربة تفاعلية مخصصة
+              </p>
+            </div>
+            
+            {/* معلومات إضافية */}
+            <div className="flex flex-col sm:flex-row items-center gap-3">
+              {marketer && (
+                <div className="bg-white bg-opacity-20 backdrop-blur-sm px-4 py-2 rounded-full">
+                  <p className="text-sm text-blue-100">من المسوق:</p>
+                  <p className="font-semibold">{marketer.name}</p>
+                  {marketer.discount_code && (
+                    <p className="text-xs text-blue-200 mt-1">
+                      كود الخصم: {marketer.discount_code}
+                    </p>
+                  )}
+                </div>
+              )}
+              
+              {/* أيقونة الصفحة */}
+              <div className="bg-white bg-opacity-20 backdrop-blur-sm p-3 rounded-full">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
               </div>
-            )}
+            </div>
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* منطقة العرض */}
-      <div className="max-w-7xl mx-auto p-4">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden">
-          {/* منطقة الأزرار */}
-          <div className="p-4">
+      {/* عرض الصفحة بنفس التصميم الأصلي */}
+      <div className="flex flex-col lg:flex-row gap-0 lg:gap-3 h-[calc(100vh-120px)] overflow-hidden bg-white dark:bg-gray-900">
+        <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden min-h-0">
+          <div className="flex py-1 sm:py-2 md:py-3 flex-1 overflow-hidden">
             <ButtonArea
-              buttons={buttons || []}
-              pages={[page]}
-              currentPageId={page?.id}
-              setCurrentPageId={() => {}}
+              buttons={buttons}
+              setButtons={setButtons}
+              pages={pages}
+              currentPageId={currentPageId}
+              setCurrentPageId={setCurrentPageId}
+              showControls={false}
+              clientButtonArea={true}
               isClientView={true}
               marketerInfo={marketer}
+              providedPositions={buttonPositions}
             />
           </div>
         </div>
-      </div>
-
-      {/* تذييل الصفحة */}
-      <div className="mt-8 py-6 bg-gray-100 dark:bg-gray-800 text-center text-gray-600 dark:text-gray-400">
-        <p>شكراً لزيارتك هذه الصفحة المخصصة</p>
-        {marketer && (
-          <p className="text-sm mt-2">تم تخصيص هذه الصفحة لك من قبل: {marketer.name}</p>
-        )}
       </div>
     </div>
   );

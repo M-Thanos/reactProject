@@ -24,6 +24,7 @@ const ButtonFooter = ({
   handleShapeChange,
   handleFileUpload,
   showControls,
+  onSwitchPage,
 }) => {
   const [showMenu, setShowMenu] = useState(false);
   const [showShapePopup, setShowShapePopup] = useState(false);
@@ -101,11 +102,15 @@ const ButtonFooter = ({
   };
 
   const switchToPage = () => {
-    if (!selectedButton) {
-      alert('من فضلك اختر زرًا');
-      return;
+    if (onSwitchPage) {
+      onSwitchPage();
+    } else {
+      if (!selectedButton) {
+        alert('من فضلك اختر زرًا');
+        return;
+      }
+      setShowPagePopup(true);
     }
-    setShowPagePopup(true);
   };
 
   const handleActionTypeChange = (e) => {
@@ -279,6 +284,9 @@ const ButtonFooter = ({
     const formData = new FormData(e.target);
 
     try {
+      const bgColor = formData.get('backgroundColor') || '#3b82f6';
+      const txtColor = formData.get('textColor') || '#000';
+      
       const updatedData = {
         type: 'shape',
         target_page: '',
@@ -286,8 +294,8 @@ const ButtonFooter = ({
         media_type: '',
         file: '',
         shape_details: {
-          background_color: formData.get('backgroundColor') || '',
-          text_color: formData.get('textColor') || '#000',
+          background_color: bgColor,
+          text_color: txtColor,
           text: formData.get('text') || 'Click me',
           font_size: formData.get('fontSize') || 16,
           border_radius: formData.get('borderRadius') || 0,
@@ -303,10 +311,21 @@ const ButtonFooter = ({
             file_type: '',
           },
         },
-        // حفظ الخصائص الافتراضية
-        color: selectedButton.color || '',
-        text_color: selectedButton.text_color || ''
+        // حفظ الألوان من shape_details لضمان التوافق
+        background_color: bgColor,
+        backgroundColor: bgColor,
+        text_color: txtColor,
+        textColor: txtColor,
+        color: bgColor
       };
+
+      console.log('🎨 حفظ الألوان للزر:', selectedButton?.id);
+      console.log('📦 البيانات المحفوظة:', {
+        background_color: bgColor,
+        text_color: txtColor,
+        shape_details_background: updatedData.shape_details.background_color,
+        shape_details_text: updatedData.shape_details.text_color
+      });
 
       if (selectedButton && selectedButton.id) {
         await updateButtonInAPI(selectedButton.id, updatedData);
@@ -399,7 +418,7 @@ const ButtonFooter = ({
 
   return (
     <>
-      <nav className="bg-white dark:bg-gray-800 text-white p-4 flex justify-between w-full items-center shadow-lg shadow-gray-500/50 dark:shadow-none">
+      <nav className="fixed bottom-4 left-4 right-4 bg-white dark:bg-gray-800 text-white p-3 flex justify-between items-center shadow-lg shadow-gray-500/50 dark:shadow-none rounded-lg z-50">
         <div className="container mx-auto xl:flex items-center justify-end gap-8 2xsm:hidden ">
           <ul className="flex gap-4">
             {buttons.map((button, index) => (
