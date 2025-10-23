@@ -281,7 +281,8 @@ const MarketersListPage = () => {
       if (!linkId) {
         toast.loading('جاري إنشاء رابط العميل...', { id: 'creating-client-link' });
         linkId = await generateLinkForMarketer(marketer.id);
-        toast.success('تم إنشاء رابط العميل بنجاح!', { id: 'creating-client-link' });
+        toast.dismiss('creating-client-link');
+        toast.success('تم إنشاء رابط العميل بنجاح!');
         fetchMarketers(); // تحديث القائمة
       }
       
@@ -292,6 +293,7 @@ const MarketersListPage = () => {
       toast.success(`تم فتح صفحة العميل المخصصة 🎉`);
     } catch (error) {
       console.error('❌ خطأ في فتح صفحة العميل:', error);
+      toast.dismiss('creating-client-link');
       toast.error('حدث خطأ في فتح صفحة العميل');
     }
   };

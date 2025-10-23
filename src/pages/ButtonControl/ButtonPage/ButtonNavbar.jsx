@@ -29,6 +29,7 @@ const ButtonNavbar = ({
   setShowColorPicker,
   setMeasurementForm,
   handleGeneratePageLink,
+  handleMigratePositions,
 }) => {
   const dropdownRef = useRef(null); // Reference to the dropdown
 

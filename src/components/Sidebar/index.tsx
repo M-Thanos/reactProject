@@ -1,8 +1,14 @@
 // import { useEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import Logo from '../../images/logo/logo.svg';
-import { FaHome } from 'react-icons/fa';
-import { FaArrowLeft } from 'react-icons/fa';
+import { 
+  FaHome, 
+  FaArrowLeft, 
+  FaUsers, 
+  FaUserTie, 
+  FaEye
+} from 'react-icons/fa';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface SidebarProps {
   sidebarOpen: boolean;
@@ -10,29 +16,32 @@ interface SidebarProps {
 }
 const Sidebar = ({ sidebarOpen, toggleSidebar }: SidebarProps) => {
   const location = useLocation();
+  const { userData } = useAuth();
 
   const SidebarMenu = [
     {
-      name: 'Dashboard',
+      name: 'لوحة التحكم',
       path: '/',
       icon: <FaHome />,
-      subNav: [
-        {
-          name: 'Button Dashboard',
-          path: '/buttonDashboard',
-        },
-      ],
     },
     {
-      name: 'Users',
-      path: '/users',
-      icon: 'icon',
+      name: 'منطقة العملاء',
+      path: '/client',
+      icon: <FaEye />,
     },
-    {
-      name: 'Products',
-      path: '/products',
-      icon: 'icon',
-    },
+    // Admin only items
+    ...(userData?.role === 'admin' ? [
+      {
+        name: 'إدارة المستخدمين',
+        path: '/users',
+        icon: <FaUsers />,
+      },
+      {
+        name: 'قائمة المسوقين',
+        path: '/marketers-list',
+        icon: <FaUserTie />,
+      },
+    ] : []),
   ];
 
   // close if the esc key is pressed
@@ -82,11 +91,6 @@ const Sidebar = ({ sidebarOpen, toggleSidebar }: SidebarProps) => {
             </ul>
           </div>
 
-          <div>
-            <h3 className="mb-4 ml-4 text-sm font-semibold text-bodydark2">
-              OTHERS
-            </h3>
-          </div>
         </nav>
         <Outlet />
       </div>
@@ -95,3 +99,4 @@ const Sidebar = ({ sidebarOpen, toggleSidebar }: SidebarProps) => {
 };
 
 export default Sidebar;
+

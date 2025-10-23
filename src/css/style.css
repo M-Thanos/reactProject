@@ -2,72 +2,18 @@
   font-family: 'Tajawal', serif;
 }
 
-/* React RND Resizable Styles */
-.button-rnd .react-resizable-handle {
-  position: absolute;
-  width: 10px;
-  height: 10px;
-  background-color: #3b82f6;
-  border: 2px solid #fff;
-  border-radius: 50%;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  z-index: 1000;
+/* React RND Resizable Styles - حل نهائي للمشاكل */
+.button-rnd {
+  pointer-events: auto !important;
 }
 
-.button-rnd .react-resizable-handle-se {
-  bottom: -5px;
-  right: -5px;
-  cursor: se-resize;
-}
-
-.button-rnd .react-resizable-handle-sw {
-  bottom: -5px;
-  left: -5px;
-  cursor: sw-resize;
-}
-
-.button-rnd .react-resizable-handle-ne {
-  top: -5px;
-  right: -5px;
-  cursor: ne-resize;
-}
-
-.button-rnd .react-resizable-handle-nw {
-  top: -5px;
-  left: -5px;
-  cursor: nw-resize;
-}
-
-.button-rnd .react-resizable-handle-e {
-  top: 50%;
-  right: -5px;
-  transform: translateY(-50%);
-  cursor: e-resize;
-}
-
-.button-rnd .react-resizable-handle-w {
-  top: 50%;
-  left: -5px;
-  transform: translateY(-50%);
-  cursor: w-resize;
-}
-
-.button-rnd .react-resizable-handle-n {
-  top: -5px;
-  left: 50%;
-  transform: translateX(-50%);
-  cursor: n-resize;
-}
-
-.button-rnd .react-resizable-handle-s {
-  bottom: -5px;
-  left: 50%;
-  transform: translateX(-50%);
-  cursor: s-resize;
-}
-
-.button-rnd:hover .react-resizable-handle {
-  background-color: #2563eb;
+/* تنسيق الـ resize handles */
+.button-rnd > div[class*="resize-handle"] {
+  opacity: 1 !important;
+  background: #3b82f6 !important;
+  border: 2px solid white !important;
+  pointer-events: auto !important;
+  z-index: 100 !important;
 }
 
 .button-rnd .react-draggable-dragging {
@@ -137,11 +83,108 @@
   opacity: 1 !important;
 }
 
+/* إصلاح مشكلة الاتجاه في Resizable */
+.button-rnd {
+  position: absolute !important;
+  transform-origin: top left !important;
+  isolation: isolate !important;
+  contain: layout !important;
+}
+
+/* ضمان أن العنصر يكبر من النقطة الصحيحة */
+.button-rnd .react-resizable {
+  position: absolute !important;
+  transform-origin: top left !important;
+  isolation: isolate !important;
+  contain: layout !important;
+}
+
+/* منع العناصر من التأثير على بعضها البعض */
+.button-rnd * {
+  position: relative !important;
+  z-index: auto !important;
+}
+
+/* إصلاح اتجاه الـ resize handles */
+.button-rnd .react-resizable-handle-se {
+  bottom: -5px !important;
+  right: -5px !important;
+  cursor: se-resize !important;
+}
+
+.button-rnd .react-resizable-handle-sw {
+  bottom: -5px !important;
+  left: -5px !important;
+  cursor: sw-resize !important;
+}
+
+.button-rnd .react-resizable-handle-ne {
+  top: -5px !important;
+  right: -5px !important;
+  cursor: ne-resize !important;
+}
+
+.button-rnd .react-resizable-handle-nw {
+  top: -5px !important;
+  left: -5px !important;
+  cursor: nw-resize !important;
+}
+
+/* إضافة handles للاتجاهات الأفقية والعمودية */
+.button-rnd .react-resizable-handle-n {
+  top: -5px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  cursor: n-resize !important;
+  width: 20px !important;
+  height: 10px !important;
+}
+
+.button-rnd .react-resizable-handle-s {
+  bottom: -5px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  cursor: s-resize !important;
+  width: 20px !important;
+  height: 10px !important;
+}
+
+.button-rnd .react-resizable-handle-e {
+  right: -5px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  cursor: e-resize !important;
+  width: 10px !important;
+  height: 20px !important;
+}
+
+.button-rnd .react-resizable-handle-w {
+  left: -5px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  cursor: w-resize !important;
+  width: 10px !important;
+  height: 20px !important;
+}
+
 /* تنسيق خاص للوسائط المستقلة (standalone-media) */
 .button-rnd button[style*="transparent"] {
   padding: 0 !important;
   border: none !important;
   box-shadow: none !important;
+}
+
+/* ضمان عدم تداخل العناصر في الحاوية الرئيسية */
+.button-container {
+  position: relative !important;
+  isolation: isolate !important;
+  contain: layout !important;
+}
+
+/* ضمان أن كل زر له مساحة منفصلة */
+.button-rnd {
+  will-change: transform !important;
+  backface-visibility: hidden !important;
 }
 
 

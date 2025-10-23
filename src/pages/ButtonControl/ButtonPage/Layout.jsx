@@ -203,6 +203,113 @@ export default function Layout() {
   });
 
   const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  // دالة حفظ المواقع والأحجام
+  const saveAllPositions = async () => {
+    try {
+      const allButtons = pages.reduce((acc, page) => {
+        return [...acc, ...page.buttons];
+      }, []);
+
+      // تنظيف المواقع قبل الحفظ: عزل مواقع الأزرار المحذوفة
+      const cleanedPositions = {};
+      const positionsToCreate = [];
+      
+      const savedPositions = localStorage.getItem('buttonPositions');
+      const positions = savedPositions ? JSON.parse(savedPositions) : {};
+      
+      Object.entries(positions).forEach(([buttonId, pos]) => {
+        const button = allButtons.find((btn) => btn.id === buttonId || btn.id === Number(buttonId));
+        if (button) {
+          if (pos.id) {
+            // موقع موجود في Firestore
+            cleanedPositions[buttonId] = pos;
+          } else {
+            // موقع جديد يحتاج إنشاء
+            positionsToCreate.push({ buttonId, pos });
+          }
+        }
+      });
+
+      console.log('All buttons:', allButtons);
+      console.log('Current positions:', positions);
+      console.log('Cleaned positions to save:', cleanedPositions);
+      console.log('Positions to create:', positionsToCreate);
+
+      // إنشاء المواقع الجديدة أولاً
+      for (const { buttonId, pos } of positionsToCreate) {
+        try {
+          const positionData = {
+            x: Math.round(Number(pos.x) || 0),
+            y: Math.round(Number(pos.y) || 0),
+            buttonId: buttonId,
+            button: buttonId,
+          };
+
+          console.log(`Creating new position for button ${buttonId}:`, positionData);
+
+          const createdPosition = await addButtonPosition(positionData);
+          console.log(`New position created for button ${buttonId}:`, createdPosition);
+          
+          // إضافة الموقع الجديد إلى cleanedPositions
+          cleanedPositions[buttonId] = {
+            ...pos,
+            id: createdPosition.id
+          };
+        } catch (error) {
+          console.error(`Failed to create position for button ${buttonId}:`, error);
+          throw new Error(`فشل في إنشاء موقع للزر ${buttonId}`);
+        }
+      }
+
+      // تحديث الـ localStorage بالمواقع المحدثة
+      localStorage.setItem('buttonPositions', JSON.stringify(cleanedPositions));
+
+      // تحديث المواقع الموجودة
+      const saveResults = await Promise.allSettled(
+        Object.entries(cleanedPositions).map(async ([buttonId, pos]) => {
+          if (!pos.id) {
+            return { buttonId, success: true, skipped: true };
+          }
+
+          const positionData = {
+            x: Math.round(Number(pos.x) || 0),
+            y: Math.round(Number(pos.y) || 0),
+            buttonId: buttonId,
+            button: buttonId,
+          };
+
+          console.log(`Updating position for button ${buttonId}:`, positionData);
+
+          try {
+            await updateButtonPosition(pos.id, positionData);
+            console.log(`Position updated successfully for button ${buttonId}`);
+            return { buttonId, success: true };
+          } catch (error) {
+            console.error(`Failed to update position for button ${buttonId}:`, error);
+            return { buttonId, success: false, error };
+          }
+        }),
+      );
+
+      // فحص النتائج
+      const failedSaves = saveResults.filter(result => 
+        result.status === 'rejected' || (result.status === 'fulfilled' && !result.value.success && !result.value.skipped)
+      );
+
+      if (failedSaves.length > 0) {
+        console.error('Some positions failed to save:', failedSaves);
+        throw new Error(`${failedSaves.length} من الأزرار فشل في حفظ مواقعها`);
+      }
+
+      toast.success('تم حفظ مواقع جميع الأزرار بنجاح');
+      setHasUnsavedChanges(false);
+    } catch (error) {
+      console.error('❌ خطأ في حفظ مواقع الأزرار:', error);
+      toast.error(`حدث خطأ أثناء حفظ مواقع الأزرار: ${error.message}`);
+    }
+  };
 
   // دالة للتحقق من المؤقت
   const isButtonLocked = (buttonId) => {
@@ -485,16 +592,39 @@ export default function Layout() {
         const createdButton = await addButton(buttonData);
         console.log('✅ تم إنشاء الزر:', createdButton);
 
-        // إنشاء موقع للزر الجديد
+        // إنشاء موقع افتراضي للزر الجديد
+        const createDefaultPosition = (button, allButtons) => {
+          const columns = 4; // عدد الأعمدة في الشبكة
+          const spacing = 20; // المسافة بين الأزرار
+          const index = allButtons.length;
+          const row = Math.floor(index / columns);
+          const col = index % columns;
+          const buttonWidth = button.width || 160;
+          const buttonHeight = button.height || 160;
+          
+          return {
+            x: col * (buttonWidth + spacing) + spacing,
+            y: row * (buttonHeight + spacing) + spacing,
+          };
+        };
+
+        // الحصول على جميع الأزرار الحالية
+        const allButtons = pages.reduce((acc, page) => {
+          return [...acc, ...page.buttons];
+        }, []);
+
+        // إنشاء موقع افتراضي للزر الجديد
+        const defaultPosition = createDefaultPosition(newButton, allButtons);
+        
         const buttonPosition = {
-          x: 0,
-          y: 0,
+          x: defaultPosition.x,
+          y: defaultPosition.y,
           buttonId: createdButton.id,
           button: createdButton.id,
         };
 
         await addButtonPosition(buttonPosition);
-        console.log('✅ تم إنشاء موقع الزر');
+        console.log('✅ تم إنشاء موقع الزر:', buttonPosition);
 
         console.log('🔄 تحديث البيانات...');
         await refreshData();
@@ -530,9 +660,33 @@ export default function Layout() {
 
         const createdButton = await addButton(buttonData);
 
+        // إنشاء موقع افتراضي للزر المنسوخ
+        const createDefaultPosition = (button, allButtons) => {
+          const columns = 4; // عدد الأعمدة في الشبكة
+          const spacing = 20; // المسافة بين الأزرار
+          const index = allButtons.length;
+          const row = Math.floor(index / columns);
+          const col = index % columns;
+          const buttonWidth = button.width || 160;
+          const buttonHeight = button.height || 160;
+          
+          return {
+            x: col * (buttonWidth + spacing) + spacing,
+            y: row * (buttonHeight + spacing) + spacing,
+          };
+        };
+
+        // الحصول على جميع الأزرار الحالية
+        const allButtons = pages.reduce((acc, page) => {
+          return [...acc, ...page.buttons];
+        }, []);
+
+        // إنشاء موقع افتراضي للزر المنسوخ
+        const defaultPosition = createDefaultPosition(buttonData, allButtons);
+        
         const buttonPosition = {
-          x: 0,
-          y: 0,
+          x: defaultPosition.x,
+          y: defaultPosition.y,
           buttonId: createdButton.id,
           button: createdButton.id,
         };
@@ -667,10 +821,23 @@ export default function Layout() {
       const linkId = await generatePageLink(currentPageId);
       const fullLink = `${window.location.origin}/page/${linkId}`;
       
-      // نسخ الرابط
-      await navigator.clipboard.writeText(fullLink);
+      // نسخ الرابط مع معالجة الأخطاء
+      try {
+        await navigator.clipboard.writeText(fullLink);
+      } catch (clipboardError) {
+        console.warn('⚠️ تعذر نسخ الرابط تلقائياً:', clipboardError);
+        // fallback: إنشاء input مؤقت للنسخ
+        const tempInput = document.createElement('input');
+        tempInput.value = fullLink;
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        document.execCommand('copy');
+        document.body.removeChild(tempInput);
+      }
       
-      toast.success('تم إنشاء رابط الصفحة ونسخه! 🎉', { id: 'generating-page-link' });
+      // إزالة TOAST loading وإظهار success
+      toast.dismiss('generating-page-link');
+      toast.success('تم إنشاء رابط الصفحة ونسخه! 🎉');
       
       // إظهار الرابط في نافذة منبثقة
       const showLink = window.confirm(
@@ -682,7 +849,8 @@ export default function Layout() {
       }
     } catch (error) {
       console.error('❌ خطأ في إنشاء رابط الصفحة:', error);
-      toast.error('حدث خطأ في إنشاء رابط الصفحة', { id: 'generating-page-link' });
+      toast.dismiss('generating-page-link');
+      toast.error('حدث خطأ في إنشاء رابط الصفحة');
     }
   };
 
@@ -730,10 +898,33 @@ export default function Layout() {
           const createdMedia = await addButton(mediaData);
           console.log('✅ تم إنشاء الوسائط:', createdMedia);
 
-          // إنشاء موقع للوسائط
+          // إنشاء موقع افتراضي للوسائط
+          const createDefaultPosition = (button, allButtons) => {
+            const columns = 4; // عدد الأعمدة في الشبكة
+            const spacing = 20; // المسافة بين الأزرار
+            const index = allButtons.length;
+            const row = Math.floor(index / columns);
+            const col = index % columns;
+            const buttonWidth = button.width || 160;
+            const buttonHeight = button.height || 160;
+            
+            return {
+              x: col * (buttonWidth + spacing) + spacing,
+              y: row * (buttonHeight + spacing) + spacing,
+            };
+          };
+
+          // الحصول على جميع الأزرار الحالية
+          const allButtons = pages.reduce((acc, page) => {
+            return [...acc, ...page.buttons];
+          }, []);
+
+          // إنشاء موقع افتراضي للوسائط
+          const defaultPosition = createDefaultPosition(mediaData, allButtons);
+          
           const mediaPosition = {
-            x: 50,
-            y: 50,
+            x: defaultPosition.x,
+            y: defaultPosition.y,
             buttonId: createdMedia.id,
             button: createdMedia.id,
           };
@@ -938,6 +1129,7 @@ export default function Layout() {
     toast.success(targetButtonId ? 'تم ربط الزر بنجاح' : 'تم إلغاء الربط');
   };
 
+
   // تنظيف المؤقتات القديمة
   useEffect(() => {
     const cleanupTimers = () => {
@@ -1066,6 +1258,9 @@ export default function Layout() {
                 setButtons={handleSetButtons}
                 buttons={buttons}
                 isTimerRunning={isTimerRunning}
+                saveAllPositions={saveAllPositions}
+                hasUnsavedChanges={hasUnsavedChanges}
+                setHasUnsavedChanges={setHasUnsavedChanges}
               />
             ) : (
               <div className="flex-1 flex items-center justify-center">
@@ -1104,6 +1299,8 @@ export default function Layout() {
               }}
               handleShapeChange={handleShapeChange}
               handleFileUpload={handleFileUpload}
+              saveAllPositions={saveAllPositions}
+              hasUnsavedChanges={hasUnsavedChanges}
             />
           )}
         </div>

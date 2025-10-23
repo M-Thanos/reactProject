@@ -25,6 +25,8 @@ const ButtonFooter = ({
   handleFileUpload,
   showControls,
   onSwitchPage,
+  saveAllPositions,
+  hasUnsavedChanges,
 }) => {
   const [showMenu, setShowMenu] = useState(false);
   const [showShapePopup, setShowShapePopup] = useState(false);
@@ -382,6 +384,17 @@ const ButtonFooter = ({
       action: switchToPage,
     },
   ];
+
+  // إضافة زر الحفظ إذا كان هناك تغييرات غير محفوظة
+  if (hasUnsavedChanges && saveAllPositions) {
+    buttons.unshift({
+      id: 0,
+      name: 'حفظ المواقع والأحجام',
+      icon: '💾',
+      action: saveAllPositions,
+      className: 'bg-green-600 hover:bg-green-700',
+    });
+  }
 
   // Add states for form data
   const [formData, setFormData] = useState({

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import { getMarketerByLinkId, getAllPagesWithButtons } from '../config/firestore';
+import { getMarketerByLinkId, getAllPagesWithButtons, getAllButtonPositions, getPageDataByLinkId } from '../config/firestore';
 import ButtonArea from './ButtonControl/ButtonPage/ButtonArea';
 import { FaSpinner, FaExclamationTriangle } from 'react-icons/fa';
 
@@ -19,6 +19,7 @@ const ClientViewPage = () => {
   const [pages, setPages] = useState([]);
   const [currentPageId, setCurrentPageId] = useState(null);
   const [buttons, setButtons] = useState([]);
+  const [buttonPositions, setButtonPositions] = useState({});
 
   useEffect(() => {
     const fetchMarketerAndData = async () => {
@@ -56,103 +57,57 @@ const ClientViewPage = () => {
           }
         }
 
-        setMarketer(marketerData);
-
-        // جلب الصفحات والأزرار
-        console.log('📄 جلب الصفحات والأزرار...');
-        const pagesData = await getAllPagesWithButtons();
+        // جلب بيانات الصفحة والأزرار والمواقع من الرابط
+        console.log('📄 جلب بيانات الصفحة من الرابط...');
+        const pageData = await getPageDataByLinkId(linkId);
         
-        if (pagesData && pagesData.length > 0) {
-          // دالة محسّنة للتحقق من صحة اللون
-          const isValidColor = (color) => {
-            if (!color || color === '' || color === 'transparent') return false;
-            if (typeof color !== 'string') return false;
-            // التحقق من hex, rgb, rgba, hsl, hsla, أسماء الألوان
-            return /^#[0-9A-Fa-f]{3,8}$|^rgb|^rgba|^hsl|^hsla|^[a-z]+$/i.test(color);
-          };
-
-          const getBackgroundColor = (btn) => {
-            const sources = [
-              btn.shapeDetails?.background_color,
-              btn.shape_details?.background_color,
-              btn.backgroundColor,
-              btn.background_color,
-              btn.color,
-            ];
-            
-            for (const color of sources) {
-              if (isValidColor(color)) {
-                return color;
-              }
-            }
-            
-            return '#3b82f6';
-          };
-
-          const getTextColor = (btn) => {
-            const sources = [
-              btn.shapeDetails?.text_color,
-              btn.shape_details?.text_color,
-              btn.textColor,
-              btn.text_color,
-            ];
-            
-            for (const color of sources) {
-              if (isValidColor(color)) {
-                return color;
-              }
-            }
-            
-            return '#ffffff';
-          };
-
-          // تنسيق البيانات
-          const formattedPages = pagesData.map((page) => ({
-            ...page,
-            is_active: page.isActive !== undefined ? page.isActive : true,
-            buttons: (page.buttons || []).map((btn) => {
-              const backgroundColor = getBackgroundColor(btn);
-              const textColor = getTextColor(btn);
-              
-              // تنسيق shape_details إذا كان موجوداً
-              let shapeDetails = btn.shapeDetails || btn.shape_details || null;
-              if (shapeDetails && typeof shapeDetails === 'object') {
-                shapeDetails = {
-                  ...shapeDetails,
-                  background_color: isValidColor(shapeDetails.background_color) 
-                    ? shapeDetails.background_color 
-                    : backgroundColor,
-                  text_color: isValidColor(shapeDetails.text_color) 
-                    ? shapeDetails.text_color 
-                    : textColor,
-                };
-              }
-
-              return {
-                ...btn,
-                page_id: btn.pageId || page.id,
-                is_active: btn.isActive !== undefined ? btn.isActive : true,
-                background_color: backgroundColor,
-                backgroundColor: backgroundColor,
-                text_color: textColor,
-                textColor: textColor,
-                color: backgroundColor,
-                shape_details: shapeDetails,
-                linked_buttons: btn.linkedButtons || btn.linked_buttons || null,
-                target_page: btn.targetPage || btn.target_page || null,
-                media_type: btn.mediaType || btn.media_type || null,
-                is_fixed: btn.isFixed || btn.is_fixed || false,
-              };
-            }),
-          }));
-
-          setPages(formattedPages);
+        console.log('📊 بيانات الصفحة المستلمة:', pageData);
+        
+        // إنشاء مواقع افتراضية للأزرار التي لها مواقع (0,0)
+        const createDefaultPositions = (buttons) => {
+          const defaultPositions = {};
+          const columns = 4; // عدد الأعمدة في الشبكة
+          const spacing = 20; // المسافة بين الأزرار
           
-          // تعيين الصفحة الأولى كافتراضية
-          if (formattedPages.length > 0) {
-            setCurrentPageId(formattedPages[0].id);
-            setButtons(formattedPages[0].buttons || []);
-          }
+          buttons.forEach((button, index) => {
+            const row = Math.floor(index / columns);
+            const col = index % columns;
+            const buttonWidth = button.width || 160;
+            const buttonHeight = button.height || 160;
+            
+            defaultPositions[button.id] = {
+              x: col * (buttonWidth + spacing) + spacing,
+              y: row * (buttonHeight + spacing) + spacing,
+            };
+          });
+          
+          return defaultPositions;
+        };
+
+        // دمج المواقع المحفوظة مع المواقع الافتراضية
+        const receivedPositions = pageData.buttonPositions || {};
+        const allButtons = pageData.buttons || [];
+        const defaultPositions = createDefaultPositions(allButtons);
+        const finalPositions = {};
+        
+        allButtons.forEach(button => {
+          const savedPosition = receivedPositions[button.id];
+          // استخدام المواقع الافتراضية دائماً لصفحة العميل لضمان التوزيع الصحيح
+          finalPositions[button.id] = defaultPositions[button.id];
+          console.log(`📍 استخدام موقع افتراضي للزر ${button.id}:`, defaultPositions[button.id]);
+        });
+
+        // تعيين البيانات
+        setMarketer(pageData.marketer || marketerData);
+        setPages(pageData.pages || []);
+        setButtons(pageData.buttons || []);
+        setButtonPositions(finalPositions);
+        
+        console.log('📍 المواقع النهائية:', finalPositions);
+        
+        // تعيين الصفحة الأولى كافتراضية
+        if (pageData.pages && pageData.pages.length > 0) {
+          setCurrentPageId(pageData.pages[0].id);
         }
 
         console.log('✅ تم جلب البيانات بنجاح');
@@ -179,6 +134,7 @@ const ClientViewPage = () => {
       const currentPage = pages.find((page) => page.id === currentPageId);
       if (currentPage) {
         setButtons(currentPage.buttons || []);
+        console.log('🔄 تم تحديث الأزرار للصفحة:', currentPageId, 'عدد الأزرار:', currentPage.buttons?.length || 0);
       }
     }
   }, [currentPageId, pages]);
@@ -287,6 +243,8 @@ const ClientViewPage = () => {
                 showControls={false}
                 isClientView={true}
                 marketerInfo={marketer}
+                providedPositions={buttonPositions}
+                clientButtonArea={true}
               />
             </div>
           </div>

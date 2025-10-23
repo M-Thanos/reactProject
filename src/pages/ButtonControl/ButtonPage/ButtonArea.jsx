@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { Rnd } from 'react-rnd';
 import SortableItem from '../SortableItem';
 import {
@@ -146,12 +146,15 @@ export default function ButtonArea({
   isTimerRunning,
   clientButtonArea,
   providedPositions,
+  saveAllPositions,
+  hasUnsavedChanges,
+  setHasUnsavedChanges,
 }) {
   const [draggingButtonId, setDraggingButtonId] = useState(null);
+  const [resizingButtonId, setResizingButtonId] = useState(null);
   const [hoveredButton, setHoveredButton] = useState(null);
   const [positions, setPositions] = useState({});
   const [sizes, setSizes] = useState({});
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState(null);
   const [showFilePreview, setShowFilePreview] = useState(false);
@@ -200,35 +203,91 @@ export default function ButtonArea({
     };
   }, [setSelectedButton, containerRef]);
 
+  // دالة مساعدة لإنشاء مواقع افتراضية للأزرار
+  const createDefaultPositions = (buttons) => {
+    const defaultPositions = {};
+    const columns = 4; // عدد الأعمدة في الشبكة
+    const spacing = 20; // المسافة بين الأزرار
+    
+    buttons.forEach((button, index) => {
+      const row = Math.floor(index / columns);
+      const col = index % columns;
+      const buttonWidth = button.width || 160;
+      const buttonHeight = button.height || 160;
+      
+      defaultPositions[button.id] = {
+        x: col * (buttonWidth + spacing) + spacing,
+        y: row * (buttonHeight + spacing) + spacing,
+      };
+    });
+    
+    return defaultPositions;
+  };
+
   useEffect(() => {
     const fetchButtonPositions = async () => {
+      if (!buttons || buttons.length === 0) {
+        console.log('⚠️ لا توجد أزرار بعد');
+        return;
+      }
+
       try {
-        // إذا كانت المواقع ممررة من الخارج (مثل PageViewPage)، استخدمها مباشرة
+        console.log(`🔍 جلب المواقع لـ ${buttons.length} زر`);
+        
+        // إذا كانت المواقع ممررة من الخارج (مثل PageViewPage أو ClientViewPage)، استخدمها مباشرة
         if (providedPositions && Object.keys(providedPositions).length > 0) {
           console.log('📍 استخدام المواقع الممررة:', providedPositions);
-          setPositions(providedPositions);
+          // التحقق من أن كل زر له موقع
+          const finalPositions = { ...providedPositions };
+          const defaultPositions = createDefaultPositions(buttons);
+          buttons.forEach(button => {
+            if (!finalPositions[button.id]) {
+              finalPositions[button.id] = defaultPositions[button.id];
+              console.log(`📍 إضافة موقع افتراضي للزر ${button.id}:`, defaultPositions[button.id]);
+            }
+          });
+          setPositions(finalPositions);
+          return;
+        }
+
+        // إذا كان في وضع صفحة العميل ولم تكن هناك مواقع ممررة، أنشئ مواقع افتراضية
+        if (clientButtonArea) {
+          console.log('📍 إنشاء مواقع افتراضية لصفحة العميل');
+          const defaultPositions = createDefaultPositions(buttons);
+          setPositions(defaultPositions);
           return;
         }
 
         const savedPositions = localStorage.getItem('buttonPositions');
         if (savedPositions) {
           const positions = JSON.parse(savedPositions);
-          // تنظيف المواقع: إزالة مواقع الأزرار المحذوفة
+          console.log('📍 مواقع محفوظة في localStorage:', positions);
+          
+          // تنظيف المواقع وإضافة مواقع افتراضية للأزرار المفقودة
           const allButtons = pages.reduce((acc, page) => {
             return [...acc, ...page.buttons];
           }, []);
+          
           const cleanedPositions = {};
-          Object.entries(positions).forEach(([buttonId, pos]) => {
-            if (allButtons.some(btn => btn.id === buttonId || btn.id === Number(buttonId))) {
-              cleanedPositions[buttonId] = pos;
+          const defaultPositions = createDefaultPositions(buttons);
+          
+          buttons.forEach(button => {
+            const savedPos = positions[button.id];
+            if (savedPos && allButtons.some(btn => btn.id === button.id || btn.id === Number(button.id))) {
+              cleanedPositions[button.id] = savedPos;
+            } else {
+              // استخدام موقع افتراضي إذا لم يكن هناك موقع محفوظ
+              cleanedPositions[button.id] = defaultPositions[button.id];
             }
           });
+          
           setPositions(cleanedPositions);
           localStorage.setItem('buttonPositions', JSON.stringify(cleanedPositions));
           return;
         }
   
         // جلب المواقع من Firestore
+        console.log('📍 جلب المواقع من Firestore...');
         const positionsFromFirestore = await getAllButtonPositions();
         const positionsData = {};
         const allButtons = pages.reduce((acc, page) => {
@@ -247,16 +306,35 @@ export default function ButtonArea({
           }
         });
   
-        setPositions(positionsData);
-        localStorage.setItem('buttonPositions', JSON.stringify(positionsData));
+        console.log(`📍 تم جلب ${Object.keys(positionsData).length} موقع من Firestore`);
+        
+        // إنشاء مواقع افتراضية ودمجها مع المواقع المحفوظة
+        const defaultPositions = createDefaultPositions(buttons);
+        const finalPositions = {};
+        
+        buttons.forEach(button => {
+          if (positionsData[button.id]) {
+            finalPositions[button.id] = positionsData[button.id];
+          } else {
+            finalPositions[button.id] = defaultPositions[button.id];
+            console.log(`📍 استخدام موقع افتراضي للزر ${button.id}`);
+          }
+        });
+
+        setPositions(finalPositions);
+        localStorage.setItem('buttonPositions', JSON.stringify(finalPositions));
       } catch (error) {
         console.error('❌ خطأ في جلب مواقع الأزرار:', error);
+        // في حالة الخطأ، استخدم مواقع افتراضية بدلاً من ترك الأزرار في (0,0)
+        console.log('📍 استخدام مواقع افتراضية بسبب الخطأ');
+        const defaultPositions = createDefaultPositions(buttons);
+        setPositions(defaultPositions);
         toast.error('حدث خطأ أثناء تحميل مواقع الأزرار');
       }
     };
   
     fetchButtonPositions();
-  }, [pages, providedPositions]);
+  }, [pages, providedPositions, buttons, clientButtonArea]);
 
   // تحميل أحجام الأزرار من localStorage
   useEffect(() => {
@@ -408,181 +486,69 @@ export default function ButtonArea({
     }
   }, [showControls, originalPages]);
 
-  const saveAllPositions = async () => {
-    try {
-      const allButtons = pages.reduce((acc, page) => {
-        return [...acc, ...page.buttons];
-      }, []);
-
-      // تنظيف المواقع قبل الحفظ: إزالة مواقع الأزرار المحذوفة
-      const cleanedPositions = {};
-      const positionsToCreate = [];
-      
-      Object.entries(positions).forEach(([buttonId, pos]) => {
-        const button = allButtons.find((btn) => btn.id === buttonId || btn.id === Number(buttonId));
-        if (button) {
-          if (pos.id) {
-            // موقع موجود في Firestore
-            cleanedPositions[buttonId] = pos;
-          } else {
-            // موقع جديد يحتاج إنشاء
-            positionsToCreate.push({ buttonId, pos });
-          }
-        }
-      });
-
-      console.log('All buttons:', allButtons);
-      console.log('Current positions:', positions);
-      console.log('Cleaned positions to save:', cleanedPositions);
-      console.log('Positions to create:', positionsToCreate);
-
-      // إنشاء المواقع الجديدة أولاً
-      for (const { buttonId, pos } of positionsToCreate) {
-        try {
-          const positionData = {
-            x: Math.round(Number(pos.x) || 0),
-            y: Math.round(Number(pos.y) || 0),
-            buttonId: buttonId,
-            button: buttonId,
-          };
-
-          console.log(`Creating new position for button ${buttonId}:`, positionData);
-
-          const createdPosition = await addButtonPosition(positionData);
-          console.log(`New position created for button ${buttonId}:`, createdPosition);
-          
-          // إضافة الموقع الجديد إلى cleanedPositions
-          cleanedPositions[buttonId] = {
-            ...pos,
-            id: createdPosition.id
-          };
-        } catch (error) {
-          console.error(`Failed to create position for button ${buttonId}:`, error);
-          throw new Error(`فشل في إنشاء موقع للزر ${buttonId}`);
-        }
-      }
-
-      // تحديث الـ state والـ localStorage بالمواقع المحدثة
-      setPositions(cleanedPositions);
-      localStorage.setItem('buttonPositions', JSON.stringify(cleanedPositions));
-
-      // تحديث المواقع الموجودة
-      const saveResults = await Promise.allSettled(
-        Object.entries(cleanedPositions).map(async ([buttonId, pos]) => {
-          if (!pos.id) {
-            return { buttonId, success: true, skipped: true };
-          }
-
-          const positionData = {
-            x: Math.round(Number(pos.x) || 0),
-            y: Math.round(Number(pos.y) || 0),
-            buttonId: buttonId,
-            button: buttonId,
-          };
-
-          console.log(`Updating position for button ${buttonId}:`, positionData);
-
-          try {
-            await updateButtonPosition(pos.id, positionData);
-            console.log(`Position updated successfully for button ${buttonId}`);
-            return { buttonId, success: true };
-          } catch (error) {
-            console.error(`Failed to update position for button ${buttonId}:`, error);
-            return { buttonId, success: false, error };
-          }
-        }),
-      );
-
-      // فحص النتائج
-      const failedSaves = saveResults.filter(result => 
-        result.status === 'rejected' || (result.status === 'fulfilled' && !result.value.success && !result.value.skipped)
-      );
-
-      if (failedSaves.length > 0) {
-        console.error('Some positions failed to save:', failedSaves);
-        throw new Error(`${failedSaves.length} من الأزرار فشل في حفظ مواقعها`);
-      }
-
-      toast.success('تم حفظ مواقع جميع الأزرار بنجاح');
-      setHasUnsavedChanges(false);
-    } catch (error) {
-      console.error('❌ خطأ في حفظ مواقع الأزرار:', error);
-      toast.error(`حدث خطأ أثناء حفظ مواقع الأزرار: ${error.message}`);
-    }
-  };
 
   return (
-    <main
-      ref={containerRef}
-      className="relative overflow-visible mt-24 sm:mt-20 lg:mt-0 flex-1 p-2 sm:p-4 md:p-6 rounded-md mb-20"
-      style={{
-        height: 'calc(70vh - 5rem)',
-        overflowY: 'auto',
-        overflowX: 'visible',
-        backgroundColor: backgroundColor,
-      }}
-    >
-      {/* أزرار التحكم - Responsive */}
-      <div className={`fixed top-2 sm:top-4 left-2 sm:left-4 lg:left-4 z-50 flex flex-wrap gap-1 sm:gap-2 ${clientButtonArea ? 'hidden' : ''}`}>
-        <Button
-          onClick={() => navigate('/client')}
-          disabled={isTimerRunning}
-          variant="primary"
-          size="sm"
-          className="text-xs sm:text-sm"
-        >
-          <span className="hidden sm:inline">عرض صفحة العميل</span>
-          <span className="sm:hidden">العميل</span>
-        </Button>
-        
-        <Button
-          onClick={toggleControls}
-          disabled={isTimerRunning}
-          variant="primary"
-          size="sm"
-          className="text-xs sm:text-sm"
-        >
-          <span className="hidden sm:inline">{showControls ? 'إخفاء التحكمات' : 'إظهار التحكمات'}</span>
-          <span className="sm:hidden">{showControls ? 'إخفاء' : 'إظهار'}</span>
-        </Button>
-
-        {/* قائمة المسوقين - للأدمن فقط */}
-        {hasRole('admin') && (
+    <>
+      <main
+        ref={containerRef}
+        className="relative overflow-visible mt-24 sm:mt-20 lg:mt-0 flex-1 p-2 sm:p-4 md:p-6 rounded-md mb-20"
+        style={{
+          height: 'calc(70vh - 5rem)',
+          overflowY: 'auto',
+          overflowX: 'visible',
+          backgroundColor: backgroundColor,
+        }}
+      >
+        {/* أزرار التحكم - Responsive */}
+        <div className={`fixed top-20 sm:top-24 md:top-20 lg:top-4 left-1/2 transform -translate-x-1/2 z-50 flex flex-wrap gap-1 sm:gap-2 justify-center ${clientButtonArea ? 'hidden' : ''}`}>
           <Button
-            onClick={() => navigate('/marketers-list')}
+            onClick={() => navigate('/client')}
             disabled={isTimerRunning}
-            variant="success"
+            variant="primary"
             size="sm"
             className="text-xs sm:text-sm"
           >
-            <span className="hidden sm:inline">قائمة المسوقين</span>
-            <span className="sm:hidden">المسوقين</span>
+            <span className="hidden sm:inline">عرض صفحة العميل</span>
+            <span className="sm:hidden">العميل</span>
           </Button>
-        )}
+          
+          <Button
+            onClick={toggleControls}
+            disabled={isTimerRunning}
+            variant="primary"
+            size="sm"
+            className="text-xs sm:text-sm"
+          >
+            <span className="hidden sm:inline">{showControls ? 'إخفاء التحكمات' : 'إظهار التحكمات'}</span>
+            <span className="sm:hidden">{showControls ? 'إخفاء' : 'إظهار'}</span>
+          </Button>
 
-        <Button
-          onClick={() => setShowColorPicker(true)}
-          disabled={isTimerRunning}
-          variant="secondary"
-          size="sm"
-          className="text-xs sm:text-sm"
-          title="تغيير لون الخلفية"
-        >
-          <span className="hidden md:inline">🎨 لون الخلفية</span>
-          <span className="md:hidden">🎨</span>
-        </Button>
-      </div>
-      
-      {hasUnsavedChanges && showControls && (
-        <Button
-          onClick={saveAllPositions}
-          variant="success"
-          size="sm"
-          className="fixed bottom-2 sm:bottom-4 left-1/2 transform -translate-x-1/2 z-50 text-xs sm:text-sm md:text-base"
-        >
-          حفظ المواقع والأحجام
-        </Button>
-      )}
+          {/* قائمة المسوقين - للأدمن فقط */}
+          {hasRole('admin') && (
+            <Button
+              onClick={() => navigate('/marketers-list')}
+              disabled={isTimerRunning}
+              variant="success"
+              size="sm"
+              className="text-xs sm:text-sm"
+            >
+              <span className="hidden sm:inline">قائمة المسوقين</span>
+              <span className="sm:hidden">المسوقين</span>
+            </Button>
+          )}
+
+          <Button
+            onClick={() => setShowColorPicker(true)}
+            disabled={isTimerRunning}
+            variant="secondary"
+            size="sm"
+            className="text-xs sm:text-sm"
+            title="تغيير لون الخلفية"
+          >
+            <span className="hidden md:inline">🎨 لون الخلفية</span>
+            <span className="md:hidden">🎨</span>
+          </Button>
+        </div>
 
       <div className="relative h-full overflow-y-visible">
         <div className="relative min-h-full pb-96">
@@ -607,66 +573,69 @@ export default function ButtonArea({
           />
 
           <div
-            className="relative"
+            className="relative button-container"
             style={{ minHeight: '200vh', overflow: 'visible' }}
           >
-            {buttons.map((button) => {
+            {buttons.map((button, index) => {
               if (!showControls && button.is_active === false) {
                 return null;
               }
 
+              console.log(`🔑 زر ${index}: ID=${button.id}, العنوان=${button.title}`);
+              
               const buttonWidth = sizes[button.id]?.width || button.width || 160;
               const buttonHeight = sizes[button.id]?.height || button.height || 160;
               const buttonX = positions[button.id]?.x || 0;
               const buttonY = positions[button.id]?.y || 0;
+              
+              console.log(`📍 موقع الزر ${button.id}: x=${buttonX}, y=${buttonY}`);
 
               return (
                 <Rnd
-                  key={button.id}
+                  key={`btn-${button.id}`}
                   size={{ width: buttonWidth, height: buttonHeight }}
                   position={{ x: buttonX, y: buttonY }}
                   onDragStop={(e, d) => {
                     if (!showControls) return;
-                    const mainRect = containerRef.current.getBoundingClientRect();
-                    const maxY = Math.max(mainRect.height * 2, 2000);
-                    const finalX = Math.round(Math.max(0, Math.min(d.x, mainRect.width - 100)));
-                    const finalY = Math.round(Math.max(0, Math.min(d.y, maxY)));
-
+                    console.log('🛑 إيقاف تحريك الزر:', button.id, 'الموضع:', d.x, d.y);
+                    
                     const newPositions = {
                       ...positions,
-                      [button.id]: {
-                        ...positions[button.id],
-                        x: finalX,
-                        y: finalY,
-                      },
+                      [button.id]: { x: d.x, y: d.y }
                     };
-
+                    
                     setPositions(newPositions);
                     localStorage.setItem('buttonPositions', JSON.stringify(newPositions));
                     setHasUnsavedChanges(true);
                   }}
+                  onResize={(e, direction, ref, delta, position) => {
+                    // callback فارغ - يمنع القفزات
+                  }}
                   onResizeStop={(e, direction, ref, delta, position) => {
                     if (!showControls) return;
+                    console.log('📏 تغيير حجم الزر:', button.id);
                     const newWidth = parseInt(ref.style.width);
                     const newHeight = parseInt(ref.style.height);
 
+                    // نحدث الحجم فقط - الموقع يبقى ثابت
                     const newSizes = {
                       ...sizes,
-                      [button.id]: {
-                        width: newWidth,
-                        height: newHeight,
-                      },
+                      [button.id]: { width: newWidth, height: newHeight }
                     };
-
+                    
                     setSizes(newSizes);
                     localStorage.setItem('buttonSizes', JSON.stringify(newSizes));
                     setHasUnsavedChanges(true);
                   }}
                   disableDragging={!showControls}
                   enableResizing={showControls}
+                  resizeHandles={['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw']}
+                  enableUserSelectHack={false}
                   minWidth={80}
                   minHeight={40}
                   bounds="parent"
+                  resizeGrid={[1, 1]}
+                  dragGrid={[1, 1]}
                   style={{
                     zIndex: draggingButtonId === button.id ? 1000 : 1,
                     cursor: showControls ? 'move' : 'pointer',
@@ -675,7 +644,7 @@ export default function ButtonArea({
                       : '0 2px 5px rgba(0,0,0,0.1)',
                     opacity: showControls && button.is_active === false ? 0.5 : 1,
                   }}
-                  className="button-rnd"
+                  className={`button-rnd ${resizingButtonId === button.id ? 'is-resizing' : ''}`}
                 >
                   <div
                     id={`button-${button.id}`}
@@ -853,6 +822,7 @@ export default function ButtonArea({
           </div>
         </div>
       )}
-    </main>
+      </main>
+    </>
   );
 }

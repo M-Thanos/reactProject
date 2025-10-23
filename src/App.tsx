@@ -19,10 +19,6 @@ import ClientViewPage from './pages/ClientViewPage';
 import PageViewPage from './pages/PageViewPage';
 import Login from './pages/Auth/Login';
 import UserManagement from './pages/Auth/UserManagement';
-import InitialSetup from './pages/Setup/InitialSetup';
-import ButtonShowcase from './pages/ButtonShowcase';
-import AdvancedButtonShowcase from './pages/AdvancedButtonShowcase';
-import ThemeCustomizer from './pages/ThemeCustomizer';
 
 import DefaultLayout from './layout/DefaultLayout';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -60,10 +56,6 @@ function App() {
       
       {/* Page View Route - Public - لعرض الصفحات */}
       <Route path="/page/:linkId" element={<PageViewPage />} />
-      
-      {/* Setup Route - للإعداد الأولي فقط */}
-      {/* احذف هذا الـroute بعد إنشاء المستخدمين! */}
-      <Route path="/setup" element={<InitialSetup />} />
 
       {/* Protected Routes */}
       <Route 
@@ -99,28 +91,6 @@ function App() {
                   element={
                     <ProtectedRoute allowedRoles={['admin']}>
                       <UserManagement />
-                    </ProtectedRoute>
-                  } 
-                />
-
-                {/* Button Showcase - All authenticated users */}
-                <Route 
-                  path="/buttons" 
-                  element={<ButtonShowcase />} 
-                />
-                
-                {/* Advanced Button Showcase */}
-                <Route 
-                  path="/advanced-buttons" 
-                  element={<AdvancedButtonShowcase />} 
-                />
-
-                {/* Theme Customizer - Admin only */}
-                <Route 
-                  path="/theme" 
-                  element={
-                    <ProtectedRoute allowedRoles={['admin', 'designer']}>
-                      <ThemeCustomizer />
                     </ProtectedRoute>
                   } 
                 />
